@@ -1,0 +1,8 @@
+export { ModernHeader } from './ModernHeader'
+export { HeroSection } from './HeroSection'
+export { FeaturesSection } from './FeaturesSection'
+export { PricingSection } from './PricingSection'
+export { TestimonialsSection } from './TestimonialsSection'
+export { DashboardPreviewSection } from './DashboardPreviewSection'
+export { FileUploadSection } from './FileUploadSection'
+export { ModernFooter } from './ModernFooter' 
