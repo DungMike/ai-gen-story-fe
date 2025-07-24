@@ -5,14 +5,34 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useSocketContext } from '@/contexts/socket-context'
 import { useStory } from '@/hooks/use-stories'
+import { useAudioWebSocket } from '@/hooks/useAudioWebSocket'
+import { useStoryAudio } from '@/hooks/useAudio'
+import { useAudioPrefetch } from '@/hooks/useAudioQueries'
+import AudioPlayer from '@/components/audio/AudioPlayer'
+import AudioGeneration from '@/components/audio/AudioGeneration'
 import { toast } from 'sonner'
-import { Image as ImageIcon, Play, Volume2, Copy, CheckCircle } from 'lucide-react'
+import { Image as ImageIcon, Play, Volume2, Copy, CheckCircle, FileText, Music, Loader2 } from 'lucide-react'
 
 function StoryDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { isConnected, onStoryProcessing, offStoryProcessing } = useSocketContext()
   const { data: story, refetch } = useStory(id!)
+  
+  // ✅ Use useQuery-optimized audio hooks
+  const { audioStats, isLoading: isAudioLoading } = useStoryAudio(id!)
+  const { prefetchAudioChunks, prefetchVoiceOptions } = useAudioPrefetch()
+  
+  // Initialize audio WebSocket connection
+  const audioWebSocket = useAudioWebSocket(id!)
+
+  // ✅ Prefetch audio data for better performance
+  useEffect(() => {
+    if (id) {
+      prefetchAudioChunks(id)
+      prefetchVoiceOptions()
+    }
+  }, [id, prefetchAudioChunks, prefetchVoiceOptions])
 
   // WebSocket event handling for real-time updates
   useEffect(() => {
@@ -65,8 +85,12 @@ function StoryDetailPage() {
               <Badge variant={story?.status?.storyGenerated ? "default" : "secondary"}>
                 {story?.status?.storyGenerated ? "Story Ready" : "Story Pending"}
               </Badge>
-              <Badge variant={story?.status?.audioGenerated ? "default" : "secondary"}>
-                {story?.status?.audioGenerated ? "Audio Ready" : "Audio Pending"}
+              <Badge variant={audioStats.hasAudio ? "default" : "secondary"} className="flex items-center gap-1">
+                {isAudioLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                {audioStats.hasAudio ? "Audio Ready" : "Audio Pending"}
+                {audioStats.totalChunks > 0 && (
+                  <span className="ml-1">({audioStats.completedChunks}/{audioStats.totalChunks})</span>
+                )}
               </Badge>
               <Badge variant={story?.status?.imagesGenerated ? "default" : "secondary"}>
                 {story?.status?.imagesGenerated ? "Images Ready" : "Images Pending"}
@@ -87,8 +111,11 @@ function StoryDetailPage() {
                 </div>
                 <div className="flex justify-start">
                   <span className='mr-2'>Audio Generated:</span>
-                  <span className={story?.status?.audioGenerated ? 'text-green-600' : 'text-yellow-600'}>
-                    {story?.status?.audioGenerated ? 'Yes' : 'No'}
+                  <span className={audioStats.hasAudio ? 'text-green-600' : 'text-yellow-600'}>
+                    {audioStats.hasAudio ? 'Yes' : 'No'}
+                    {audioStats.totalChunks > 0 && (
+                      <span className="ml-1 text-xs">({audioStats.completedChunks}/{audioStats.totalChunks})</span>
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-start">
@@ -162,7 +189,6 @@ function StoryDetailPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 pt-4 border-t">
-
             <Button
               variant={story?.status?.storyGenerated ? "secondary" : "outline"}
               onClick={() => {
@@ -203,29 +229,47 @@ function StoryDetailPage() {
             </Button>
             
             <Button
-              variant={story?.status?.audioGenerated ? "secondary" : "outline"}
               onClick={() => {
-                if (!story?.status?.audioGenerated) {
-                  navigate(`/generate-audio/${id}`)
-                }
+                navigate(`/generate-audio/${id}`)
               }}
-              className="flex items-center space-x-2"
-              disabled={story?.status?.audioGenerated}
+              className={`flex items-center space-x-2 ${audioStats.hasAudio ? 'bg-green-500' : ''}`}
+              variant={audioStats.hasAudio ? "secondary" : "outline"}
             >
-              {story?.status?.audioGenerated ? (
+              {isAudioLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : audioStats.hasAudio ? (
                 <CheckCircle className="w-4 h-4" />
               ) : (
                 <Volume2 className="w-4 h-4" />
               )}
               <span>
-                {story?.status?.audioGenerated ? "Audio Generated" : "Generate Audio"}
+                {audioStats.hasAudio ? "Audio Generated" : "Generate Audio"}
+                {audioStats.totalChunks > 0 && ` (${audioStats.completedChunks}/${audioStats.totalChunks})`}
               </span>
             </Button>
-            
             
           </div>
         </CardContent>
       </Card>
+
+      {/* Audio Section - Quick Access */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Audio Generation Preview */}
+        <AudioGeneration 
+          storyId={id!}
+          onAudioGenerated={() => {
+            refetch()
+            toast.success('Audio generated successfully!')
+          }}
+        />
+        
+        {/* Audio Player */}
+        <AudioPlayer 
+          storyId={id!}
+          showPlaylist={true}
+          autoPlay={false}
+        />
+      </div>
     </div>
   )
 }

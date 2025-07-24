@@ -51,6 +51,7 @@ export default function GenerateImagesPage() {
     refetchChunks,
     refetchStatus
   } = useImages(storyId!)
+    console.log("🚀 ~ GenerateImagesPage ~ imageChunks:", imageChunks)
 
   const [showImageDetails, setShowImageDetails] = useState<Record<string, boolean>>({})
   const [realTimeProgress, setRealTimeProgress] = useState<{
@@ -484,10 +485,11 @@ function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDelet
 
       <CardContent className="pt-0">
         {/* Image Preview */}
-        {chunk.imageUrl && (
+        {chunk.imageFile && (
           <div className="mb-3">
             <img
-              src={chunk.imageUrl}
+              crossOrigin="anonymous"
+              src={`${import.meta.env.VITE_SOCKET_URL}/${chunk.imageFile}`}
               alt={`Generated image for chunk ${chunk.chunkIndex + 1}`}
               className="w-full h-32 object-cover rounded-lg"
             />

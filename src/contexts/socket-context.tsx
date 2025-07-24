@@ -15,6 +15,10 @@ interface SocketContextType {
   offImageProcessing: () => void
   joinImageRoom: (storyId: string) => void
   leaveImageRoom: (storyId: string) => void
+  onAudioProcessing: (callback: (data: any) => void) => void
+  offAudioProcessing: () => void
+  joinAudioRoom: (storyId: string) => void
+  leaveAudioRoom: (storyId: string) => void
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined)
@@ -219,6 +223,85 @@ export function SocketProvider({ children }: SocketProviderProps) {
     }
   }
 
+  const onAudioProcessing = (callback: (data: any) => void) => {
+    if (socket) {
+      // Handle audio processing events
+      socket.on('audio-generation-progress', (data) => {
+        console.log('🎵 Audio generation progress:', data)
+        callback({ 
+          ...data, 
+          event: 'audio:processing:progress'
+        })
+      })
+      
+      socket.on('audio-generation-completed', (data) => {
+        console.log('✅ Audio generation completed:', data)
+        callback({ 
+          ...data, 
+          event: 'audio:processing:completed'
+        })
+      })
+      
+      socket.on('audio-generation-failed', (data) => {
+        console.error('❌ Audio generation failed:', data)
+        callback({ 
+          ...data, 
+          event: 'audio:processing:failed'
+        })
+      })
+      
+      socket.on('audio-generation-status', (data) => {
+        console.log('📊 Audio generation status:', data)
+        callback({ 
+          ...data, 
+          event: 'audio:status:update'
+        })
+      })
+
+      socket.on('audio-status-update', (data) => {
+        console.log('📈 Audio status update:', data)
+        callback({ 
+          ...data, 
+          event: 'audio:status:update'
+        })
+      })
+
+      socket.on('audio-status-error', (data) => {
+        console.error('❌ Audio status error:', data)
+        callback({ 
+          ...data, 
+          event: 'audio:status:error'
+        })
+      })
+    }
+  }
+
+  const offAudioProcessing = () => {
+    if (socket) {
+      socket.off('audio-generation-progress')
+      socket.off('audio-generation-completed')
+      socket.off('audio-generation-failed')
+      socket.off('audio-generation-status')
+      socket.off('audio-status-update')
+      socket.off('audio-status-error')
+      console.log('🧹 Cleaned up audio processing event listeners')
+    }
+  }
+
+  const joinAudioRoom = (storyId: string) => {
+    if (socket && isConnected) {
+      socket.emit('join-audio-room', { storyId })
+      console.log('🎵 Joining audio room for story:', storyId)
+    }
+  }
+
+  const leaveAudioRoom = (storyId: string) => {
+    if (socket && isConnected) {
+      socket.emit('leave-audio-room', { storyId })
+      console.log('👋 Leaving audio room for story:', storyId)
+    }
+  }
+
   useEffect(() => {
     if (accessToken) {
       connect()
@@ -239,7 +322,11 @@ export function SocketProvider({ children }: SocketProviderProps) {
       onImageProcessing,
       offImageProcessing,
       joinImageRoom,
-      leaveImageRoom
+      leaveImageRoom,
+      onAudioProcessing,
+      offAudioProcessing,
+      joinAudioRoom,
+      leaveAudioRoom
     }}>
       {children}
     </SocketContext.Provider>

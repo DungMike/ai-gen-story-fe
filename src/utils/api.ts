@@ -235,14 +235,25 @@ export const apiEndpoints = {
   
   // Audio endpoints
   audio: {
-    generate: (storyId: string) => `/audio/${storyId}/generate`,
-    chunks: (storyId: string) => `/audio/${storyId}/chunks`,
+    generate: (storyId: string) => `/audio/generate/${storyId}`,
+    story: (storyId: string) => `/audio/story/${storyId}`,
+    chunk: (id: string) => `/audio/chunk/${id}`,
+    status: (storyId: string) => `/audio/status/${storyId}`,
+    voices: '/audio/voices',
+    retry: (storyId: string) => `/audio/retry/${storyId}`,
+    download: (storyId: string) => `/audio/download/${storyId}`,
+    preview: (id: string) => `/audio/preview/${id}`,
   },
   
   // Image endpoints
   images: {
-    generate: (storyId: string) => `/images/${storyId}/generate`,
-    chunks: (storyId: string) => `/images/${storyId}/chunks`,
+    generate: (storyId: string) => `/images/generate/${storyId}`,
+    story: (storyId: string) => `/images/story/${storyId}`,
+    chunk: (id: string) => `/images/chunk/${id}`,
+    status: (storyId: string) => `/images/status/${storyId}`,
+    retry: (storyId: string) => `/images/retry/${storyId}`,
+    download: (storyId: string) => `/images/download/${storyId}`,
+    preview: (id: string) => `/images/preview/${id}`,
   },
 }
 
@@ -280,12 +291,19 @@ export const queryKeys = {
   
   // Audio queries
   audio: {
-    chunks: (storyId: string) => ['audio', 'chunks', storyId],
+    all: ['audio'],
+    story: (storyId: string) => ['audio', 'story', storyId],
+    chunk: (id: string) => ['audio', 'chunk', id],
+    status: (storyId: string) => ['audio', 'status', storyId],
+    voices: ['audio', 'voices'],
   },
   
   // Image queries
   images: {
-    chunks: (storyId: string) => ['images', 'chunks', storyId],
+    all: ['images'],
+    story: (storyId: string) => ['images', 'story', storyId],
+    chunk: (id: string) => ['images', 'chunk', id],
+    status: (storyId: string) => ['images', 'status', storyId],
   },
 }
 
