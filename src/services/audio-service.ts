@@ -1,18 +1,8 @@
 // Audio Service - Unified API service following project architecture
+import { VoiceOption } from '@/components/audio/constants';
 import { apiClient } from '@/utils/api'
 
-export interface VoiceOption {
-  id: string;
-  name: string;
-  style: 'bright' | 'upbeat' | 'informative' | 'firm' | 'specialized';
-  tone: string;
-  description: string;
-  characteristics: {
-    personality: string;
-    energy: string;
-    clarity: string;
-  };
-}
+
 
 export interface AudioChunk {
   _id: string;
@@ -121,15 +111,6 @@ class AudioService {
     }
   }
 
-  // Get available voice options
-  async getVoiceOptions(): Promise<VoiceOptionsResponse> {
-    try {
-      const response = await apiClient.get<VoiceOptionsResponse>('/audio/voices')
-      return response
-    } catch (error) {
-      throw error
-    }
-  }
 
   // Retry failed audio for a story
   async retryFailedAudio(storyId: string): Promise<RetryAudioResponse> {

@@ -4,29 +4,26 @@ import { useImages } from '@/hooks/use-images'
 import { useSocketContext } from '@/contexts/socket-context'
 import { useStory } from '@/hooks/use-stories'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { 
-  Play, 
-  Download, 
-  Trash2, 
-  RefreshCw, 
+import {
+  Play,
+  Download,
+  Trash2,
+  RefreshCw,
   Image as ImageIcon,
   AlertCircle,
   CheckCircle,
   Clock,
   XCircle,
-  ArrowLeft,
-  Settings,
-  Eye,
+  ArrowLeft, Eye,
   EyeOff
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { GenerateImagesDto, ImageChunk } from '@/services/images-service'
 import { Separator } from '@radix-ui/react-select'
-import { Label } from 'recharts'
 import { Input } from '@/components/ui'
 
 export default function GenerateImagesPage() {
@@ -51,7 +48,7 @@ export default function GenerateImagesPage() {
     refetchChunks,
     refetchStatus
   } = useImages(storyId!)
-    console.log("🚀 ~ GenerateImagesPage ~ imageChunks:", imageChunks)
+  console.log("🚀 ~ GenerateImagesPage ~ imageChunks:", imageChunks)
 
   const [showImageDetails, setShowImageDetails] = useState<Record<string, boolean>>({})
   const [realTimeProgress, setRealTimeProgress] = useState<{
@@ -76,7 +73,7 @@ export default function GenerateImagesPage() {
     // Set up image processing event listeners
     onImageProcessing((data: any) => {
       console.log('🖼️ Image processing event:', data)
-      
+
       switch (data.event) {
         case 'image:processing:start':
           setRealTimeProgress({
@@ -205,7 +202,7 @@ export default function GenerateImagesPage() {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Badge variant={isConnected ? "default" : "secondary"}>
             {isConnected ? "Connected" : "Disconnected"}
@@ -254,8 +251,8 @@ export default function GenerateImagesPage() {
         </div>
       </form>
 
-            {/* Action Buttons */}
-            <Card className="mb-6">
+      {/* Action Buttons */}
+      <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-3">
             <Button
@@ -465,8 +462,8 @@ function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDelet
             <span className="text-sm font-medium">Chunk {chunk.chunkIndex + 1}</span>
           </div>
           <div className="flex items-center space-x-1">
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className={`${getStatusColor(chunk.status)} text-white`}
             >
               {chunk.status}

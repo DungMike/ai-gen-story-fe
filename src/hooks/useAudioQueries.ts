@@ -4,7 +4,6 @@ import { audioService } from '@/services/audio-service'
 import { queryKeys } from '@/utils/api'
 import type { 
   AudioChunk, 
-  VoiceOption, 
   AudioGenerationStatus, 
   VoiceOptionsResponse,
   GenerateAudioDto 
@@ -50,20 +49,6 @@ export const useAudioStatusQuery = (storyId: string, enabled = true) => {
       return isProcessing ? 10000 : false // 10s polling when active
     },
     refetchOnWindowFocus: true,
-  })
-}
-
-/**
- * Get voice options with long-term caching
- */
-export const useVoiceOptionsQuery = () => {
-  return useQuery({
-    queryKey: queryKeys.audio.voices,
-    queryFn: audioService.getVoiceOptions,
-    staleTime: 24 * 60 * 60 * 1000, // 24h - voices rarely change
-    gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days cache
-    refetchOnWindowFocus: false, // No need to refetch voices frequently
-    retry: 3, // Retry 3 times on failure
   })
 }
 
@@ -244,14 +229,12 @@ export const useAudioPrefetch = () => {
   const prefetchVoiceOptions = () => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.audio.voices,
-      queryFn: audioService.getVoiceOptions,
       staleTime: 24 * 60 * 60 * 1000,
     })
   }
   
   return { 
     prefetchAudioChunks, 
-    prefetchAudioStatus, 
-    prefetchVoiceOptions 
+    prefetchAudioStatus
   }
 } 

@@ -20,7 +20,7 @@ function GenerateAudioPage() {
   
   // ✅ Use useQuery-optimized hooks
   const { audioStats, isLoading: isAudioLoading } = useStoryAudio(storyId!)
-  const { prefetchAudioChunks, prefetchVoiceOptions } = useAudioPrefetch()
+  const { prefetchAudioChunks } = useAudioPrefetch()
   
   // Initialize audio WebSocket connection
   const audioWebSocket = useAudioWebSocket(storyId!)
@@ -31,9 +31,8 @@ function GenerateAudioPage() {
   useEffect(() => {
     if (storyId) {
       prefetchAudioChunks(storyId)
-      prefetchVoiceOptions()
     }
-  }, [storyId, prefetchAudioChunks, prefetchVoiceOptions])
+  }, [storyId, prefetchAudioChunks])
 
   useEffect(() => {
     // Check if we have story data

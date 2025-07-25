@@ -1,5 +1,5 @@
 // Audio Hooks - useQuery for data + Jotai for UI state
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {
   playerStateAtom,
@@ -25,13 +25,13 @@ import {
 import { 
   useAudioChunksQuery, 
   useAudioStatusQuery, 
-  useVoiceOptionsQuery,
   useGenerateAudioMutation,
   useDeleteAudioMutation,
   useDownloadAudioMutation 
 } from '@/hooks/useAudioQueries'
-import type { AudioChunk, VoiceOption } from '@/services/audio-service'
+import type { AudioChunk } from '@/services/audio-service'
 import { toast } from 'sonner'
+import { VoiceOption } from '@/components/audio/constants'
 
 /**
  * Hook for audio player functionality (UI state only)
@@ -147,10 +147,7 @@ export const useAudioPlayerControls = () => {
  */
 export const useAudioGenerationControls = () => {
   const generationState = useAtomValue(generationStateAtom)
-  
-  // ✅ Use useQuery for voice options data
-  const { data: voiceOptionsResponse, isLoading: isLoadingVoices } = useVoiceOptionsQuery()
-  const voiceOptions = voiceOptionsResponse?.data?.voices || []
+  const [voiceOptions, setVoiceOptions] = useState<VoiceOption>()
   
   // ✅ Use mutation for audio generation
   const generateMutation = useGenerateAudioMutation()
@@ -188,7 +185,6 @@ export const useAudioGenerationControls = () => {
     ...generationState,
     voiceOptions,
     selectedVoice,
-    isLoadingVoices,
     isGenerating: generateMutation.isPending || generationState.isGenerating,
     generateAudio,
     selectVoice,
@@ -356,21 +352,14 @@ export const useAudioPlaylist = (storyId: string) => {
  * Hook for voice selection and management (useQuery + Jotai)
  */
 export const useVoiceSelection = () => {
-  // ✅ Use useQuery for voice options data
-  const { data: voiceOptionsResponse, isLoading, refetch } = useVoiceOptionsQuery()
-  const voiceOptions = voiceOptionsResponse?.data?.voices || []
+
+
+
+  const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([])
+
   
   const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom)
 
-  const currentVoice = voiceOptions.find((voice: VoiceOption) => voice.id === selectedVoice)
-
-  const getVoiceById = useCallback((voiceId: string) => {
-    return voiceOptions.find((voice: VoiceOption) => voice.id === voiceId)
-  }, [voiceOptions])
-
-  const getVoicesByStyle = useCallback((style: string) => {
-    return voiceOptions.filter((voice: VoiceOption) => voice.style === style)
-  }, [voiceOptions])
 
   const selectVoice = useCallback((voiceId: string) => {
     setSelectedVoice(voiceId)
@@ -379,11 +368,6 @@ export const useVoiceSelection = () => {
   return {
     voiceOptions,
     selectedVoice,
-    currentVoice,
-    isLoadingVoices: isLoading,
-    getVoiceById,
-    getVoicesByStyle,
     selectVoice,
-    refreshVoiceOptions: refetch
   }
 } 
