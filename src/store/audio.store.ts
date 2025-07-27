@@ -1,7 +1,8 @@
 // Audio Store - Jotai atoms for UI state only (data fetching moved to useQuery)
-import { atom } from 'jotai'
-import { atomWithStorage } from 'jotai/utils'
-import type { AudioChunk, VoiceOption } from '@/services/audio-service'
+import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
+import type { AudioChunk } from '@/services/audio-service';
+import { VoiceOption } from '@/components/audio/constants';
 
 // UI-only types (keep these here since they're UI-specific)
 export interface AudioPlayerState {
@@ -22,7 +23,7 @@ export interface AudioGenerationUIState {
 }
 
 // Constants (moved from types file)
-export const DEFAULT_VOICE = 'voice-1'
+export const DEFAULT_VOICE = VoiceOption.Achird
 export const DEFAULT_WORD_PER_CHUNK = 500
 
 // Initial States

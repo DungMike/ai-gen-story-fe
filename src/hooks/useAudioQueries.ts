@@ -2,11 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { audioService } from '@/services/audio-service'
 import { queryKeys } from '@/utils/api'
-import type { 
-  AudioChunk, 
-  AudioGenerationStatus, 
-  VoiceOptionsResponse,
-  GenerateAudioDto 
+import type {
+  AudioChunk,
+  AudioGenerationStatus, GenerateAudioDto
 } from '@/services/audio-service'
 import { toast } from 'sonner'
 
@@ -235,6 +233,7 @@ export const useAudioPrefetch = () => {
   
   return { 
     prefetchAudioChunks, 
-    prefetchAudioStatus
+    prefetchAudioStatus,
+    prefetchVoiceOptions
   }
 } 
