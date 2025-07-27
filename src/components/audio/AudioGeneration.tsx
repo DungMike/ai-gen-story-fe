@@ -4,15 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Play, 
-  Pause, 
-  Download, 
-  Trash2, 
+import {
+  Pause,
+  Download,
+  Trash2,
   RefreshCw,
   Wand2,
   Volume2,
@@ -22,10 +20,10 @@ import {
   Loader2
 } from 'lucide-react'
 import { useAudioGenerationControls, useStoryAudio, useVoiceSelection } from '@/hooks/useAudio'
-import type { VoiceOption } from '@/services/audio-service'
 import { DEFAULT_WORD_PER_CHUNK } from '@/store/audio.store'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AudioGenerationProps {
   storyId: string
@@ -41,7 +39,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
   const generation = useAudioGenerationControls()
   const storyAudio = useStoryAudio(storyId)
   const voiceSelection = useVoiceSelection()
-  
+
   const [showVoiceSelector, setShowVoiceSelector] = useState(false)
   const [wordPerChunk, setWordPerChunk] = useState(DEFAULT_WORD_PER_CHUNK)
 
@@ -61,16 +59,6 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
   const handleVoiceSelect = (voiceId: string) => {
     voiceSelection.selectVoice(voiceId)
   }
-
-  // Group voices by style (with loading check)
-  const groupedVoices = voiceSelection.voiceOptions.reduce((groups, voice) => {
-    const style = voice.style
-    if (!groups[style]) {
-      groups[style] = []
-    }
-    groups[style].push(voice)
-    return groups
-  }, {} as Record<string, VoiceOption[]>)
 
   const getStatusColor = () => {
     if (storyAudio.error) return 'destructive'
@@ -130,7 +118,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {/* Audio Statistics */}
           {storyAudio.isLoading && !storyAudio.audioChunks.length ? (
@@ -202,16 +190,11 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
                   onClick={() => setShowVoiceSelector(!showVoiceSelector)}
                   variant="default"
                   className="gap-2"
-                  disabled={generation.isLoadingVoices}
                 >
-                  {generation.isLoadingVoices ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Wand2 className="h-4 w-4" />
-                  )}
+                  <Wand2 className="h-4 w-4" />
                   Generate Audio
                 </Button>
-                
+
                 {storyAudio.audioStats.hasAudio && (
                   <>
                     <Button
@@ -227,7 +210,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
                       )}
                       Download All
                     </Button>
-                    
+
                     <Button
                       onClick={storyAudio.deleteAllAudio}
                       variant="outline"
@@ -243,7 +226,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
                     </Button>
                   </>
                 )}
-                
+
                 <Button
                   onClick={() => storyAudio.refreshAudioChunks()}
                   variant="ghost"
@@ -256,7 +239,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
                 </Button>
               </>
             )}
-            
+
             {generation.isGenerating && (
               <Button
                 onClick={generation.reset}
@@ -276,67 +259,26 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              Voice Selection
-              {voiceSelection.isLoadingVoices && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
+              Audio Generation Settings
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Current Selection */}
-            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-              <div>
-                <div className="font-medium">
-                  {voiceSelection.currentVoice?.name || 'Unknown'}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {voiceSelection.currentVoice?.description || 'No description'}
-                </div>
-              </div>
-              <Badge variant="outline">{voiceSelection.currentVoice?.style}</Badge>
-            </div>
-
-            {/* Voice Options by Style */}
-            <div className="space-y-4 max-h-64 overflow-y-auto">
-              {voiceSelection.isLoadingVoices ? (
-                <VoiceOptionSkeleton />
-              ) : (
-                Object.entries(groupedVoices).map(([style, voices]) => (
-                  <div key={style} className="space-y-2">
-                    <Label className="text-sm font-medium capitalize">{style} Voices</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {voices.map((voice) => (
-                        <div
-                          key={voice.id}
-                          className={cn(
-                            "p-3 rounded-lg border cursor-pointer transition-colors",
-                            voiceSelection.selectedVoice === voice.id
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
-                          )}
-                          onClick={() => handleVoiceSelect(voice.id)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm">{voice.name}</div>
-                              <div className="text-xs text-muted-foreground line-clamp-2">
-                                {voice.description}
-                              </div>
-                            </div>
-                            <Badge variant="secondary" className="text-xs ml-2">
-                              {voice.tone}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
+            <div className="space-y-2">
+              <Label htmlFor="wordPerChunk">Voice Selection</Label>
+              <Select value={voiceSelection.selectedVoice} onValueChange={handleVoiceSelect}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Voice Selection" />
+                </SelectTrigger>
+                <SelectContent>
+                  {voiceSelection.voiceOptions.map((voice) => (
+                    <SelectItem key={voice} value={voice}>{voice}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Settings */}
-            <Separator />
+            {/* <Separator /> */}
             <div className="space-y-2">
               <Label htmlFor="wordPerChunk">Words per Chunk</Label>
               <Input
@@ -365,7 +307,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
               <Button
                 onClick={handleStartGeneration}
                 className="gap-2"
-                disabled={voiceSelection.isLoadingVoices}
+                disabled={generation.isGenerating}
               >
                 <Wand2 className="h-4 w-4" />
                 Start Generation

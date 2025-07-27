@@ -13,21 +13,17 @@ import {
   setMutedAtom,
   setCurrentChunkAtom,
   setPlaylistAtom,
-  resetPlayerAtom,
-  // Keep only UI-related generation atoms
-  startGenerationAtom,
-  setGenerationProgressAtom,
+  resetPlayerAtom, setGenerationProgressAtom,
   setGenerationErrorAtom,
   completeGenerationAtom,
-  resetGenerationAtom,
-  clearErrorAtom
+  resetGenerationAtom
 } from '@/store/audio.store'
-import { 
-  useAudioChunksQuery, 
-  useAudioStatusQuery, 
+import {
+  useAudioChunksQuery,
+  useAudioStatusQuery,
   useGenerateAudioMutation,
   useDeleteAudioMutation,
-  useDownloadAudioMutation 
+  useDownloadAudioMutation
 } from '@/hooks/useAudioQueries'
 import type { AudioChunk } from '@/services/audio-service'
 import { toast } from 'sonner'
@@ -352,11 +348,7 @@ export const useAudioPlaylist = (storyId: string) => {
  * Hook for voice selection and management (useQuery + Jotai)
  */
 export const useVoiceSelection = () => {
-
-
-
-  const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>([])
-
+  const [voiceOptions, setVoiceOptions] = useState<VoiceOption[]>(Object.values(VoiceOption))
   
   const [selectedVoice, setSelectedVoice] = useAtom(selectedVoiceAtom)
 
