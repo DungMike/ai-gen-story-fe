@@ -2,28 +2,28 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {
-  playerStateAtom,
-  generationStateAtom,
-  selectedVoiceAtom,
-  // Keep only UI state atoms, remove data atoms
-  setPlayingAtom,
-  setCurrentTimeAtom,
-  setDurationAtom,
-  setVolumeAtom,
-  setMutedAtom,
-  setCurrentChunkAtom,
-  setPlaylistAtom,
-  resetPlayerAtom, setGenerationProgressAtom,
-  setGenerationErrorAtom,
-  completeGenerationAtom,
-  resetGenerationAtom
+    playerStateAtom,
+    generationStateAtom,
+    selectedVoiceAtom,
+    // Keep only UI state atoms, remove data atoms
+    setPlayingAtom,
+    setCurrentTimeAtom,
+    setDurationAtom,
+    setVolumeAtom,
+    setMutedAtom,
+    setCurrentChunkAtom,
+    setPlaylistAtom,
+    resetPlayerAtom, setGenerationProgressAtom,
+    setGenerationErrorAtom,
+    completeGenerationAtom,
+    resetGenerationAtom
 } from '@/store/audio.store'
 import {
-  useAudioChunksQuery,
-  useAudioStatusQuery,
-  useGenerateAudioMutation,
-  useDeleteAudioMutation,
-  useDownloadAudioMutation
+    useAudioChunksQuery,
+    useAudioStatusQuery,
+    useGenerateAudioMutation,
+    useDeleteAudioMutation,
+    useDownloadAudioMutation
 } from '@/hooks/useAudioQueries'
 import type { AudioChunk } from '@/services/audio-service'
 import { toast } from 'sonner'
@@ -175,7 +175,7 @@ export const useAudioGenerationControls = () => {
   }, [generateMutation, selectedVoice, setGenerationError])
 
   const selectVoice = useCallback((voiceId: string) => {
-    setSelectedVoice(voiceId)
+    setSelectedVoice(voiceId as VoiceOption)
   }, [setSelectedVoice])
 
   return {
@@ -365,7 +365,7 @@ export const useVoiceSelection = () => {
 
 
   const selectVoice = useCallback((voiceId: string) => {
-    setSelectedVoice(voiceId)
+    setSelectedVoice(voiceId as VoiceOption)
   }, [setSelectedVoice])
 
   return {

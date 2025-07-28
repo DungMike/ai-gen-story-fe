@@ -57,7 +57,7 @@ interface UseBatchSocketOptions {
 }
 
 export function useBatchSocket(options: UseBatchSocketOptions = {}) {
-  const { user } = useAuth()
+  const { user, accessToken } = useAuth()
   const socketRef = useRef<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
@@ -76,7 +76,7 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
 
   // Initialize socket connection
   const connectSocket = useCallback(() => {
-    if (!user?.token) {
+    if (!accessToken) {
       setConnectionError('No authentication token available')
       return
     }
@@ -85,7 +85,7 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
     
     socketRef.current = io(socketUrl, {
       auth: {
-        token: user.token
+        token: accessToken
       },
       transports: ['websocket', 'polling'],
       autoConnect: true
@@ -155,7 +155,7 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
       console.error('Socket error:', data)
       setConnectionError(data.message)
     })
-  }, [user?.token, onBatchStart, onBatchProgress, onBatchComplete, onBatchError, onAutoModeStart, onAutoModeProgress, onAutoModeComplete, onAutoModeError])
+      }, [accessToken, onBatchStart, onBatchProgress, onBatchComplete, onBatchError, onAutoModeStart, onAutoModeProgress, onAutoModeComplete, onAutoModeError])
 
   // Join batch room when batchId is available
   const joinBatchRoom = useCallback(() => {
@@ -182,7 +182,7 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
 
   // Initialize connection
   useEffect(() => {
-    if (user?.token) {
+    if (accessToken) {
       connectSocket()
     }
 
@@ -191,7 +191,7 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
         socketRef.current.disconnect()
       }
     }
-  }, [user?.token, connectSocket])
+  }, [accessToken, connectSocket])
 
   // Join/leave batch room when batchId changes
   useEffect(() => {
