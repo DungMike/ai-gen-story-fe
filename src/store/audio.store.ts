@@ -20,6 +20,7 @@ export interface AudioGenerationUIState {
   progress: number;
   currentStep: string;
   error?: string;
+  totalChunks?: number;
 }
 
 // Constants (moved from types file)
@@ -41,7 +42,8 @@ const initialGenerationState: AudioGenerationUIState = {
   isGenerating: false,
   progress: 0,
   currentStep: '',
-  error: undefined
+  error: undefined,
+  totalChunks: 0,
 }
 
 // =============================================================================
@@ -146,12 +148,13 @@ export const startGenerationAtom = atom(
 
 export const setGenerationProgressAtom = atom(
   null,
-  (get, set, params: { progress: number; currentStep: string }) => {
+  (get, set, params: { progress: number; currentStep: string, totalChunks?: number }) => {
     const currentState = get(generationStateAtom)
     set(generationStateAtom, {
       ...currentState,
       progress: params.progress,
-      currentStep: params.currentStep
+      currentStep: params.currentStep,
+      ...(params.totalChunks && { totalChunks: params.totalChunks }) 
     })
   }
 )

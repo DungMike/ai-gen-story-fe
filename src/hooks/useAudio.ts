@@ -77,9 +77,10 @@ export const useAudioPlayerControls = () => {
 
   const play = useCallback((audioSrc?: string) => {
     if (!audioRef.current) return
-    
-    if (audioSrc && audioRef.current.src !== audioSrc) {
-      audioRef.current.src = audioSrc
+    const audioUrl = `${import.meta.env.VITE_SOCKET_URL}/${audioSrc}`
+    if (audioSrc && audioRef.current.src !== audioUrl) {
+      audioRef.current.src = audioUrl
+      audioRef.current.crossOrigin ="anonymous"
     }
     
     audioRef.current.play()
@@ -203,6 +204,7 @@ export const useStoryAudio = (storyId: string) => {
     error, 
     refetch: refreshAudioChunks 
   } = useAudioChunksQuery(storyId)
+
   
   // ✅ Use useQuery for audio status
   const { 
@@ -323,6 +325,14 @@ export const useAudioPlaylist = (storyId: string) => {
     }
   }, [completedChunks.length, playChunk])
 
+  const togglePlayPauseChunk = useCallback((chunkIndex: number) => {
+    if (playerControls.isPlaying) {
+      playerControls.pause()
+    } else {
+      playChunk(chunkIndex);
+    }
+  }, [playerControls.isPlaying, playerControls.pause, playChunk])
+
   // Auto-play next chunk when current ends
   useEffect(() => {
     if (!playerControls.isPlaying && 
@@ -340,6 +350,7 @@ export const useAudioPlaylist = (storyId: string) => {
     playNext,
     playPrevious,
     playFromBeginning,
+    togglePlayPauseChunk,
     ...playerControls
   }
 }

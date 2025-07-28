@@ -3,19 +3,14 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX,
-  Download,
-  List,
+import {
+  Play,
+  Pause, SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX, List,
   Shuffle,
   Repeat,
   Loader2
@@ -149,17 +144,17 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               )}
             </div>
           </div>
-          
+
           {/* Current Track Info */}
           {currentChunk && (
             <div className="text-sm text-muted-foreground">
               <p className="truncate">
-                Chunk {(playlist.currentChunkIndex ?? 0) + 1}: {currentChunk.text.substring(0, 100)}...
+                Chunk {(playlist.currentChunkIndex ?? 0) + 1}: {currentChunk.text && `${currentChunk.text.substring(0, 100)}...`}
               </p>
             </div>
           )}
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {/* Progress Bar */}
           <div className="space-y-2">
@@ -190,7 +185,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             >
               <Shuffle className="h-4 w-4" />
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -199,21 +194,21 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             >
               <SkipBack className="h-4 w-4" />
             </Button>
-            
+
             <Button
               variant="default"
               size="lg"
               onClick={playlist.togglePlayPause}
-              className="h-12 w-12 rounded-full"
+              className="h-12 w-12 p-0 rounded-full"
               disabled={!currentChunk}
             >
               {playlist.isPlaying ? (
-                <Pause className="h-5 w-5" />
+                <Pause className="h-5 w-5 text-white" />
               ) : (
-                <Play className="h-5 w-5 ml-0.5" />
+                <Play className="h-5 w-5 ml-0.5 text-white" />
               )}
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -222,7 +217,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             >
               <SkipForward className="h-4 w-4" />
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -283,7 +278,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                     "flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-muted/50 transition-colors",
                     playlist.currentChunkIndex === index && "bg-muted"
                   )}
-                  onClick={() => playlist.playChunk(index)}
+                  onClick={() => playlist.togglePlayPauseChunk(index)}
                 >
                   <Button
                     variant="ghost"
@@ -296,7 +291,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                       <Play className="h-3 w-3" />
                     )}
                   </Button>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">
@@ -307,12 +302,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      {chunk.text.substring(0, 80)}...
+                      {chunk.text ? `${chunk.text.substring(0, 80)}...` : ''}
                     </p>
                   </div>
                 </div>
               ))}
-              
+
               {/* Show skeleton items if still loading more chunks */}
               {isLoadingAudio && (
                 <>
@@ -331,17 +326,17 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 </>
               )}
             </div>
-            
+
             <Separator className="my-4" />
-            
+
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>
-                {playlist.completedChunks.length} chunks 
+                {playlist.completedChunks.length} chunks
                 {isLoadingAudio && " (loading...)"}
               </span>
               <span>
                 Total: {formatTime(
-                  playlist.completedChunks.reduce((total, chunk) => 
+                  playlist.completedChunks.reduce((total, chunk) =>
                     total + (chunk.metadata?.duration || 0), 0
                   )
                 )}

@@ -34,7 +34,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   const connect = () => {
     console.log('🔐 Socket connect called, accessToken:', accessToken ? 'Available' : 'Not available')
-    
+
     if (!accessToken) {
       console.log('❌ No token available, skipping socket connection')
       return
@@ -43,7 +43,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
     const VITE_SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
     console.log("🚀 ~ connect ~ API_BASE_URL:", VITE_SOCKET_URL)
     console.log("🔑 ~ connect ~ Token length:", accessToken.length)
-    
+
     const newSocket = io(VITE_SOCKET_URL, {
       query: { token: accessToken },
       withCredentials: true,
@@ -118,35 +118,35 @@ export function SocketProvider({ children }: SocketProviderProps) {
       // Handle story processing events
       socket.on('story:processing:start', (data) => {
         console.log('🚀 Story processing started:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'story:processing:start',
           step: data.step || 'story_generation'
         })
       })
-      
+
       socket.on('story:processing:progress', (data) => {
         console.log('📈 Story processing progress:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'story:processing:progress',
           step: data.step || 'ai_processing'
         })
       })
-      
+
       socket.on('story:processing:complete', (data) => {
         console.log('✅ Story processing complete:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'story:processing:complete',
           step: 'saving_file'
         })
       })
-      
+
       socket.on('story:processing:error', (data) => {
         console.error('❌ Story processing error:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'story:processing:error',
           step: data.step || 'error'
         })
@@ -169,32 +169,32 @@ export function SocketProvider({ children }: SocketProviderProps) {
       // Handle image processing events
       socket.on('image:processing:start', (data) => {
         console.log('🖼️ Image processing started:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'image:processing:start'
         })
       })
-      
+
       socket.on('image:processing:progress', (data) => {
         console.log('📈 Image processing progress:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'image:processing:progress'
         })
       })
-      
+
       socket.on('image:processing:complete', (data) => {
         console.log('✅ Image processing complete:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'image:processing:complete'
         })
       })
-      
+
       socket.on('image:processing:error', (data) => {
         console.error('❌ Image processing error:', data)
-        callback({ 
-          ...data, 
+        callback({
+          ...data,
           event: 'image:processing:error'
         })
       })
@@ -226,51 +226,35 @@ export function SocketProvider({ children }: SocketProviderProps) {
   const onAudioProcessing = (callback: (data: any) => void) => {
     if (socket) {
       // Handle audio processing events
-      socket.on('audio-generation-progress', (data) => {
-        console.log('🎵 Audio generation progress:', data)
-        callback({ 
-          ...data, 
+      socket.on('audio:processing:start', (data) => {
+        console.log('🎵 Audio processing started:', data)
+        callback({
+          ...data,
+          event: 'audio:processing:start'
+        })
+      })
+
+      socket.on('audio:processing:progress', (data) => {
+        console.log('📈 Audio processing progress:', data)
+        callback({
+          ...data,
           event: 'audio:processing:progress'
         })
       })
-      
-      socket.on('audio-generation-completed', (data) => {
-        console.log('✅ Audio generation completed:', data)
-        callback({ 
-          ...data, 
-          event: 'audio:processing:completed'
-        })
-      })
-      
-      socket.on('audio-generation-failed', (data) => {
-        console.error('❌ Audio generation failed:', data)
-        callback({ 
-          ...data, 
-          event: 'audio:processing:failed'
-        })
-      })
-      
-      socket.on('audio-generation-status', (data) => {
-        console.log('📊 Audio generation status:', data)
-        callback({ 
-          ...data, 
-          event: 'audio:status:update'
+
+      socket.on('audio:processing:complete', (data) => {
+        console.log('✅ Audio processing complete:', data)
+        callback({
+          ...data,
+          event: 'audio:processing:complete'
         })
       })
 
-      socket.on('audio-status-update', (data) => {
-        console.log('📈 Audio status update:', data)
-        callback({ 
-          ...data, 
-          event: 'audio:status:update'
-        })
-      })
-
-      socket.on('audio-status-error', (data) => {
-        console.error('❌ Audio status error:', data)
-        callback({ 
-          ...data, 
-          event: 'audio:status:error'
+      socket.on('audio:processing:error', (data) => {
+        console.error('❌ Audio processing error:', data)
+        callback({
+          ...data,
+          event: 'audio:processing:error'
         })
       })
     }
@@ -278,12 +262,10 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
   const offAudioProcessing = () => {
     if (socket) {
-      socket.off('audio-generation-progress')
-      socket.off('audio-generation-completed')
-      socket.off('audio-generation-failed')
-      socket.off('audio-generation-status')
-      socket.off('audio-status-update')
-      socket.off('audio-status-error')
+      socket.off('audio:processing:start')
+      socket.off('audio:processing:progress')
+      socket.off('audio:processing:complete')
+      socket.off('audio:processing:error')
       console.log('🧹 Cleaned up audio processing event listeners')
     }
   }
