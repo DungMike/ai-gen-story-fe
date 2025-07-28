@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { imagesService, type ImageChunk, type ImageProcessingStatus, type GenerateImagesResponse, type RetryImagesResponse, GenerateImagesDto } from '@/services/images-service'
+import { imagesService, GenerateImagesDto } from '@/services/images-service'
+import { useDownloadImagesMutation } from './use-image-queries'
+import { useCallback } from 'react'
 
 export function useImages(storyId: string) {
   const queryClient = useQueryClient()
-
+  const downloadMutation = useDownloadImagesMutation()
   // Get image chunks
   const {
     data: imageChunks = [],
@@ -95,25 +97,15 @@ export function useImages(storyId: string) {
   })
 
   // Download images mutation
-  const downloadImagesMutation = useMutation({
-    mutationFn: () => imagesService.downloadImages(storyId),
-    onSuccess: (blob) => {
-      // Create download link
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `story-images-${storyId}.zip`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      toast.success('Images downloaded successfully!')
-    },
-    onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to download images'
-      toast.error(message)
+  const downloadAllImage = useCallback(async () => {
+    if (storyId) {
+      try {
+        await downloadMutation.mutateAsync(storyId)
+      } catch (error: any) {
+        toast.error('Failed to download audio files')
+      }
     }
-  })
+  }, [storyId, downloadMutation])
 
   return {
     // Data
@@ -134,14 +126,14 @@ export function useImages(storyId: string) {
     retryFailedImages: retryFailedImagesMutation.mutate,
     deleteImageChunk: deleteImageChunkMutation.mutate,
     deleteAllImages: deleteAllImagesMutation.mutate,
-    downloadImages: downloadImagesMutation.mutate,
+    downloadImages: downloadAllImage,
     
     // Loading states for actions
     isGenerating: generateImagesMutation.isPending,
     isRetrying: retryFailedImagesMutation.isPending,
     isDeletingChunk: deleteImageChunkMutation.isPending,
     isDeletingAll: deleteAllImagesMutation.isPending,
-    isDownloading: downloadImagesMutation.isPending,
+    isDownloading: downloadMutation.isPending,
     
     // Refetch functions
     refetchChunks,

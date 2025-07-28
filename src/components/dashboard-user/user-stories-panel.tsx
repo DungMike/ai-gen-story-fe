@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useCallback, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, BookOpen, Edit, Eye, Download, FileText, Play, Image as ImageIcon } from 'lucide-react';
-import { statusMap, UserStoryStatus } from './constant';
+import { Search, BookOpen, Edit, Eye, Download, FileText, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { UserStoryStatus } from './constant';
 import { UserStoriesPanelProps } from './interface';
-import { Navigate, useNavigate } from 'react-router-dom';
-
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useDownloadAudioMutation } from '@/hooks/useAudioQueries';
+import { useDownloadImagesMutation } from '@/hooks/use-image-queries';
 
 export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
   stories = [],
@@ -27,15 +29,18 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
 }) => {
   const [selectedStory, setSelectedStory] = useState<any>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
-
+  // Download images mutation
+  const downloadImagesMutation = useDownloadImagesMutation();
+  // Download audio mutation
+  const downloadAudioMutation = useDownloadAudioMutation()
   const getStatusText = (status: any) => {
     if (!status) return 'Chưa hoàn thành';
-    
+
     const completed = [];
     if (status.storyGenerated) completed.push('Truyện');
     if (status.audioGenerated) completed.push('Audio');
     if (status.imagesGenerated) completed.push('Ảnh');
-    
+
     if (completed.length === 0) return 'Chưa hoàn thành';
     if (completed.length === 3) return 'Hoàn thành';
     return `Đã tạo: ${completed.join(', ')}`;
@@ -64,6 +69,26 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
   const handleGenerateAudio = (storyId: string) => {
     navigate(`/generate-audio/${storyId}`);
   };
+
+  const downloadAllAudio = useCallback(async (storyId: string) => {
+    if (storyId) {
+      try {
+        await downloadAudioMutation.mutateAsync(storyId)
+      } catch (error: any) {
+        toast.error('Failed to download audio files')
+      }
+    }
+  }, [downloadAudioMutation])
+
+  const downloadAllImage = useCallback(async (storyId: string) => {
+    if (storyId) {
+      try {
+        await downloadImagesMutation.mutateAsync(storyId)
+      } catch (error: any) {
+        toast.error('Failed to download image files')
+      }
+    }
+  }, [downloadImagesMutation])
 
   return (
     <div className="space-y-6">
@@ -184,7 +209,7 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                     <div>
                       <span className="text-xs text-gray-500">Thời gian xử lý</span>
                       <p className="text-sm font-medium">
-                        {story.metadata.processingTime ? `${(story.metadata.processingTime/1000).toFixed(1)}s` : '-'}
+                        {story.metadata.processingTime ? `${(story.metadata.processingTime / 1000).toFixed(1)}s` : '-'}
                       </p>
                     </div>
                   </div>
@@ -193,27 +218,63 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                 {/* Trạng thái chi tiết */}
                 {story.status && (
                   <div className="space-y-3 mb-4">
-                    <div className="flex gap-2 flex-wrap">
-                      <Badge variant={story.status.storyGenerated ? "default" : "secondary"} className="flex items-center gap-1">
-                        <FileText className="w-3 h-3" />
-                        Truyện {story.status.storyGenerated ? '✓' : '...'}
-                      </Badge>
-                      <Badge variant={story.status.audioGenerated ? "default" : "secondary"} className="flex items-center gap-1">
-                        <Play className="w-3 h-3" />
-                        Audio {story.status.audioGenerated ? '✓' : '...'}
-                      </Badge>
-                      <Badge variant={story.status.imagesGenerated ? "default" : "secondary"} className="flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3" />
-                        Ảnh {story.status.imagesGenerated ? '✓' : '...'}
-                      </Badge>
+                    <div className="flex gap-3 justify-between align-center flex-wrap">
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge variant={story.status.storyGenerated ? "default" : "secondary"} className="flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          Truyện {story.status.storyGenerated ? '✓' : '...'}
+                        </Badge>
+                        <Badge variant={story.status.audioGenerated ? "default" : "secondary"} className="flex items-center gap-1">
+                          <Play className="w-3 h-3" />
+                          Audio {story.status.audioGenerated ? '✓' : '...'}
+                        </Badge>
+                        <Badge variant={story.status.imagesGenerated ? "default" : "secondary"} className="flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" />
+                          Ảnh {story.status.imagesGenerated ? '✓' : '...'}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {story.status.audioGenerated &&
+                          <Button
+                            onClick={() => downloadAllAudio(story._id)}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                            disabled={downloadAudioMutation.isPending}
+                          >
+                            {downloadAudioMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                            Audios
+                          </Button>
+                        }
+                        {story.status.imagesGenerated &&
+                          <Button
+                            onClick={() => downloadAllImage(story._id)}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                            disabled={downloadImagesMutation.isPending}
+                          >
+                            {downloadImagesMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                            Images
+                          </Button>
+                        }
+                      </div>
                     </div>
-                    
+
                     {/* Generate buttons */}
                     <div className="flex gap-2 flex-wrap">
                       {!story.status.storyGenerated && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleGenerateStory(story._id)}
                           className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
                         >
@@ -221,11 +282,11 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                           Tạo truyện
                         </Button>
                       )}
-                      
+
                       {!story.status.imagesGenerated && story.status.storyGenerated && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleGenerateImages(story._id)}
                           className="flex items-center gap-1 text-purple-600 border-purple-600 hover:bg-purple-50"
                         >
@@ -233,11 +294,11 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                           Tạo ảnh
                         </Button>
                       )}
-                      
+
                       {!story.status.audioGenerated && story.status.storyGenerated && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => handleGenerateAudio(story._id)}
                           className="flex items-center gap-1 text-green-600 border-green-600 hover:bg-green-50"
                         >
@@ -254,9 +315,9 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">Nội dung truyện</span>
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => openContentModal(story)}
                         className="text-blue-600 hover:text-blue-700"
                       >
@@ -313,7 +374,7 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                   <p className="whitespace-pre-wrap text-sm">{selectedStory?.originalContent}</p>
                 </div>
-                
+
                 {selectedStory?.generatedContent && (
                   <>
                     <h4 className="text-lg font-semibold mb-4">Nội dung đã sinh:</h4>
