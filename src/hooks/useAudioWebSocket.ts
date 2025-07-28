@@ -37,9 +37,14 @@ export const useAudioWebSocket = (storyId: string) => {
 
     // Set up audio event listeners
     onAudioProcessing((data) => {
-      if (data.storyId !== storyId) return
-
       switch (data.event) {
+        case 'audio:processing:start':
+          setGenerationProgress({
+            progress: data.progress || 0,
+            currentStep: `Processing chunk ${data.chunkIndex + 1}/${data.totalChunks}...`,
+            totalChunks: data.totalChunks || 0
+          })
+          break
         case 'audio:processing:progress':
           console.log('🎵 Audio progress:', data)
           setGenerationProgress({
