@@ -49,4 +49,14 @@ export {
 } from "./alert-dialog"
 
 export { ConfirmDialog } from "./confirm-dialog"
-export { ScrollArea, ScrollBar } from "./scroll-area" 
+export { ScrollArea, ScrollBar } from "./scroll-area"
+export {
+  Toast,
+  ToastAction,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from "./toast"
+export { Toaster } from "./toaster" 
