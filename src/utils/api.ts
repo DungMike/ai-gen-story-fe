@@ -152,9 +152,7 @@ export const apiClient = {
   upload: async <T>(url: string, formData: FormData, config = {}): Promise<T> => {
     const response = await api.post<T>(url, formData, {
       ...config,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      // Don't set Content-Type for FormData - let browser set it with boundary
     })
     return response.data
   },
