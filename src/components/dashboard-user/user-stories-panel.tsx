@@ -29,6 +29,7 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
 }) => {
   const [selectedStory, setSelectedStory] = useState<any>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   // Download images mutation
   const downloadImagesMutation = useDownloadImagesMutation();
   // Download audio mutation
@@ -57,6 +58,11 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
     setSelectedStory(story);
     setIsContentModalOpen(true);
   };
+
+  const openPromptModal = (story: any) => {
+    setSelectedStory(story);
+    setIsPromptModalOpen(true);
+  };
   const navigate = useNavigate();
   const handleGenerateStory = (storyId: string) => {
     navigate(`/create-story?edit=${storyId}`);
@@ -68,6 +74,10 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
 
   const handleGenerateAudio = (storyId: string) => {
     navigate(`/generate-audio/${storyId}`);
+  };
+
+  const handleStoryDetail = (storyId: string) => {
+    navigate(`/story/${storyId}`);
   };
 
   const downloadAllAudio = useCallback(async (storyId: string) => {
@@ -167,7 +177,7 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                     <Button size="sm" variant="outline" onClick={() => onEdit?.(story._id)}>
                       <Edit className="w-4 h-4 mr-1" /> Chỉnh sửa
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => onView?.(story._id)}>
+                    <Button size="sm" variant="outline" onClick={() => handleStoryDetail(story._id)}>
                       <Eye className="w-4 h-4 mr-1" /> Xem
                     </Button>
                   </div>
@@ -177,20 +187,12 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                 {story.style && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
                     <div>
-                      <span className="text-xs text-gray-500">Thể loại</span>
-                      <p className="text-sm font-medium">{story.style.genre}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">Tông giọng</span>
-                      <p className="text-sm font-medium">{story.style.tone}</p>
+                      <span className="text-xs text-gray-500">Story id</span>
+                      <p className="text-sm font-medium">{story._id}</p>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Độ dài</span>
                       <p className="text-sm font-medium">{story.style.length}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">Đối tượng</span>
-                      <p className="text-sm font-medium">{story.style.targetAudience}</p>
                     </div>
                   </div>
                 )}
@@ -220,15 +222,15 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                   <div className="space-y-3 mb-4">
                     <div className="flex gap-3 justify-between align-center flex-wrap">
                       <div className="flex gap-2 flex-wrap">
-                        <Badge variant={story.status.storyGenerated ? "default" : "secondary"} className="flex items-center gap-1">
+                        <Badge onClick={() => handleGenerateStory(story._id)} variant={story.status.storyGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
                           <FileText className="w-3 h-3" />
                           Truyện {story.status.storyGenerated ? '✓' : '...'}
                         </Badge>
-                        <Badge variant={story.status.audioGenerated ? "default" : "secondary"} className="flex items-center gap-1">
+                        <Badge  onClick={() => handleGenerateAudio(story._id)} variant={story.status.audioGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
                           <Play className="w-3 h-3" />
                           Audio {story.status.audioGenerated ? '✓' : '...'}
                         </Badge>
-                        <Badge variant={story.status.imagesGenerated ? "default" : "secondary"} className="flex items-center gap-1">
+                        <Badge onClick={() => handleGenerateImages(story._id)}  variant={story.status.imagesGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
                           <ImageIcon className="w-3 h-3" />
                           Ảnh {story.status.imagesGenerated ? '✓' : '...'}
                         </Badge>
@@ -310,6 +312,33 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                   </div>
                 )}
 
+                {/* Nội dung custom prompt */}
+                {story.customPrompt && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">Custom prompt</span>
+                      {story.customPrompt.length > 200 && <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openPromptModal(story)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        Xem đầy đủ
+                      </Button>
+                      }
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 overflow-hidden" style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical' as const
+                      }}>
+                        {story.customPrompt.length > 200 ? `${story.customPrompt.substring(0, 200)}...` : story.customPrompt}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Nội dung truyện preview */}
                 {story.generatedContent && (
                   <div className="mb-4">
@@ -383,6 +412,25 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+       {/* Modal xem custom prompt */}
+       <Dialog open={isPromptModalOpen} onOpenChange={setIsPromptModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>{selectedStory?.title}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[60vh] w-full">
+            <div className="p-4">
+              <div className="prose max-w-none">
+                <h4 className="text-lg font-semibold mb-4">Custom prompt:</h4>
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <p className="whitespace-pre-wrap text-sm">{selectedStory?.customPrompt}</p>
+                </div>
               </div>
             </div>
           </ScrollArea>
