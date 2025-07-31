@@ -118,10 +118,7 @@ export default function GenerateImagesPage() {
 
   const handleGenerateImages = () => {
     if (!storyId) return
-    generateImages({
-      customPrompt: '',
-      maxWordsPerChunk: 200
-    })
+    generateImages(generateImagesDto)
   }
 
   const handleRetryFailed = () => {
