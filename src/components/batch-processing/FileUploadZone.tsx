@@ -77,7 +77,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
 
     fileArray.forEach((file) => {
       const validation = validateFile(file)
-      
+
       if (validation.isValid) {
         // Check for duplicate files
         const isDuplicate = uploadedFiles.some(
@@ -93,7 +93,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
           })
         }
       } else {
-        setDragError(validation.error)
+        setDragError(validation.error || 'Validation failed')
       }
     })
 
@@ -114,8 +114,8 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
 
   // Update file status
   const updateFileStatus = useCallback((fileId: string, updates: Partial<UploadedFile>) => {
-    setUploadedFiles(prev => 
-      prev.map(file => 
+    setUploadedFiles(prev =>
+      prev.map(file =>
         file.id === fileId ? { ...file, ...updates } : file
       )
     )
@@ -139,7 +139,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(false)
-    
+
     if (disabled) return
 
     const files = e.dataTransfer.files
@@ -219,7 +219,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
           )}
         >
           <motion.div
-            animate={{ 
+            animate={{
               y: isDragOver && !disabled ? -5 : 0,
               scale: isDragOver && !disabled ? 1.05 : 1
             }}
@@ -230,11 +230,11 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
               isDragOver && !disabled ? "text-blue-500" : "text-gray-400"
             )} />
           </motion.div>
-          
+
           <p className="text-lg font-medium mb-2">
             {disabled ? 'Upload disabled' : 'Drop files here or click to browse'}
           </p>
-          
+
           <p className="text-sm text-gray-500">
             Supported formats: {acceptedFileTypes.join(', ')}
           </p>
@@ -272,7 +272,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
             <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">
               Selected Files ({uploadedFiles.length}/{maxFiles})
             </h4>
-            
+
             <div className="space-y-2">
               <AnimatePresence>
                 {uploadedFiles.map((file) => (
@@ -284,7 +284,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                     className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                   >
                     {getStatusIcon(file.status)}
-                    
+
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {file.file.name}
@@ -292,7 +292,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {formatFileSize(file.file.size)}
                       </p>
-                      
+
                       {/* Progress bar for uploading files */}
                       {file.status === 'uploading' && (
                         <div className="mt-2">
@@ -302,13 +302,13 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
                           </p>
                         </div>
                       )}
-                      
+
                       {/* Error message */}
                       {file.status === 'error' && file.error && (
                         <p className="text-xs text-red-500 mt-1">{file.error}</p>
                       )}
                     </div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"

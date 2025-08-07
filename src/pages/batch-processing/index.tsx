@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileUploadZone, type UploadedFile } from '@/components/batch-processing/FileUploadZone'
 import { BatchConfigForm, type BatchConfigFormData } from '@/components/batch-processing/BatchConfigForm'
@@ -6,12 +6,12 @@ import { BatchProgress } from '@/components/batch-processing/BatchProgress'
 import { useBatchUpload, useBatchCreate } from '@/hooks/use-batch-processing'
 import { useBatchSocket } from '@/hooks/use-batch-socket'
 import { useToast } from '@/hooks/use-toast'
-import type { 
-  BatchProcessingEvent, 
-  BatchProgressEvent, 
-  BatchCompleteEvent, 
+import type {
+  BatchProcessingEvent,
+  BatchProgressEvent,
+  BatchCompleteEvent,
   BatchErrorEvent,
-  AutoModeEvent 
+  AutoModeEvent
 } from '@/hooks/use-batch-socket'
 
 function BatchProcessingPage() {
@@ -19,58 +19,75 @@ function BatchProcessingPage() {
   const [showConfigForm, setShowConfigForm] = useState(false)
   const [showProgress, setShowProgress] = useState(false)
   const [batchId, setBatchId] = useState<string | null>(null)
-  
+
   const batchUploadMutation = useBatchUpload()
   const batchCreateMutation = useBatchCreate()
   const { toast } = useToast()
 
+  // Memoized callback functions to prevent unnecessary re-renders
+  const onBatchStart = useCallback((event: BatchProcessingEvent) => {
+    console.log('Batch started:', event)
+    toast({
+      title: "Batch Processing Started",
+      description: `Processing ${event.totalStories} stories...`,
+      variant: "info"
+    })
+  }, [toast])
+
+  const onBatchProgress = useCallback((event: BatchProgressEvent) => {
+    console.log('Batch progress:', event)
+  }, [])
+
+  const onBatchComplete = useCallback((event: BatchCompleteEvent) => {
+    console.log('Batch completed:', event)
+    toast({
+      title: "Batch Processing Completed",
+      description: `${event.completedStories} successful, ${event.failedStories} failed`,
+      variant: event.failedStories > 0 ? "warning" : "success"
+    })
+  }, [toast])
+
+  const onBatchError = useCallback((event: BatchErrorEvent) => {
+    console.log('Batch error:', event)
+    toast({
+      title: "Batch Processing Error",
+      description: event.error,
+      variant: "destructive"
+    })
+  }, [toast])
+
+  const onAutoModeStart = useCallback((event: AutoModeEvent) => {
+    console.log('Auto mode started:', event)
+  }, [])
+
+  const onAutoModeProgress = useCallback((event: AutoModeEvent) => {
+    console.log('Auto mode progress:', event)
+  }, [])
+
+  const onAutoModeComplete = useCallback((event: AutoModeEvent) => {
+    console.log('Auto mode completed:', event)
+  }, [])
+
+  const onAutoModeError = useCallback((event: AutoModeEvent) => {
+    console.log('Auto mode error:', event)
+    toast({
+      title: "Auto Mode Error",
+      description: event.error || "An error occurred during auto mode processing",
+      variant: "destructive"
+    })
+  }, [toast])
+
   // WebSocket integration
   const { isConnected, connectionError } = useBatchSocket({
     batchId: batchId || undefined,
-    onBatchStart: (event: BatchProcessingEvent) => {
-      console.log('Batch started:', event)
-      toast({
-        title: "Batch Processing Started",
-        description: `Processing ${event.totalStories} stories...`,
-        variant: "info"
-      })
-    },
-    onBatchProgress: (event: BatchProgressEvent) => {
-      console.log('Batch progress:', event)
-    },
-    onBatchComplete: (event: BatchCompleteEvent) => {
-      console.log('Batch completed:', event)
-      toast({
-        title: "Batch Processing Completed",
-        description: `${event.completedStories} successful, ${event.failedStories} failed`,
-        variant: event.failedStories > 0 ? "warning" : "success"
-      })
-    },
-    onBatchError: (event: BatchErrorEvent) => {
-      console.log('Batch error:', event)
-      toast({
-        title: "Batch Processing Error",
-        description: event.error,
-        variant: "destructive"
-      })
-    },
-    onAutoModeStart: (event: AutoModeEvent) => {
-      console.log('Auto mode started:', event)
-    },
-    onAutoModeProgress: (event: AutoModeEvent) => {
-      console.log('Auto mode progress:', event)
-    },
-    onAutoModeComplete: (event: AutoModeEvent) => {
-      console.log('Auto mode completed:', event)
-    },
-    onAutoModeError: (event: AutoModeEvent) => {
-      console.log('Auto mode error:', event)
-      toast({
-        title: "Auto Mode Error",
-        description: event.error || "An error occurred during auto mode processing",
-        variant: "destructive"
-      })
-    }
+    onBatchStart,
+    onBatchProgress,
+    onBatchComplete,
+    onBatchError,
+    onAutoModeStart,
+    onAutoModeProgress,
+    onAutoModeComplete,
+    onAutoModeError
   })
 
   const handleFilesChange = (files: UploadedFile[]) => {
@@ -94,12 +111,12 @@ function BatchProcessingPage() {
 
       // Upload files with progress tracking
       const files = filesToUpload.map(file => file.file)
-      const result = await batchUploadMutation.mutateAsync({ 
+      const result = await batchUploadMutation.mutateAsync({
         files,
         onProgress: (progress) => {
           // Update individual file progress
-          setUploadedFiles(prev => 
-            prev.map(file => 
+          setUploadedFiles(prev =>
+            prev.map(file =>
               filesToUpload.some(uploadFile => uploadFile.id === file.id)
                 ? { ...file, progress }
                 : file
@@ -111,7 +128,39 @@ function BatchProcessingPage() {
 
       // Update files with uploaded URLs
       const finalFiles = uploadedFiles.map(file => {
-        const uploadedFile = result.files.find(uploaded => uploaded.fileName === file.file.name)
+        console.log("🚀 ~ handleUploadFiles ~ file.name:", file.file.name)
+        console.log("🚀 ~ handleUploadFiles ~ file.size:", file.file.size)
+        console.log("🚀 ~ handleUploadFiles ~ result.files:", result.files)
+
+        // Try to match by file name first
+        let uploadedFile = result.files.find(uploaded => uploaded.fileName === file.file.name)
+
+        // If not found by name, try to match by file size
+        if (!uploadedFile) {
+          uploadedFile = result.files.find(uploaded => uploaded.fileSize === file.file.size)
+        }
+
+        // If still not found, try to match by file path (extract filename from path)
+        if (!uploadedFile) {
+          uploadedFile = result.files.find(uploaded => {
+            const pathFileName = uploaded.filePath?.split('/').pop()?.split('_').slice(0, -2).join('_')
+            const originalFileName = file.file.name.replace(/\.[^/.]+$/, '') // Remove extension
+            return pathFileName === originalFileName
+          })
+        }
+
+        // If still not found, try to match by file size and similar name
+        if (!uploadedFile) {
+          uploadedFile = result.files.find(uploaded => {
+            const sizeMatch = uploaded.fileSize === file.file.size
+            const nameSimilar = uploaded.fileName.includes(file.file.name.substring(0, 10)) ||
+              file.file.name.includes(uploaded.fileName.substring(0, 10))
+            return sizeMatch && nameSimilar
+          })
+        }
+
+        console.log("🚀 ~ handleUploadFiles ~ uploadedFile:", uploadedFile)
+
         if (uploadedFile) {
           return {
             ...file,
@@ -120,12 +169,20 @@ function BatchProcessingPage() {
             uploadedUrl: uploadedFile.fileUrl
           }
         }
-        return file
+
+        // If no match found, mark as error
+        console.warn(`No matching uploaded file found for: ${file.file.name}`)
+        return {
+          ...file,
+          status: 'error' as const,
+          error: 'File upload completed but could not be matched'
+        }
       })
+      console.log("🚀 ~ handleUploadFiles ~ finalFiles:", finalFiles)
 
       setUploadedFiles(finalFiles)
       setShowConfigForm(true)
-      
+
       toast({
         title: "Files Uploaded Successfully",
         description: `${result.totalFiles} files uploaded (${(result.totalSize / 1024).toFixed(1)} KB)`,
@@ -139,7 +196,7 @@ function BatchProcessingPage() {
           : file
       )
       setUploadedFiles(errorFiles)
-      
+
       toast({
         title: "Upload Failed",
         description: error.message || "Failed to upload files. Please try again.",
@@ -149,15 +206,15 @@ function BatchProcessingPage() {
   }
 
   const handleBatchCreate = async (formData: BatchConfigFormData) => {
+    console.log("🚀 ~ handleBatchCreate ~ formData:", formData)
     try {
       const result = await batchCreateMutation.mutateAsync(formData)
-      console.log("🚀 ~ handleBatchCreate ~ result:", result)
-      
+
       if (result.success) {
         setBatchId(result.data.batchId)
         setShowConfigForm(false)
         setShowProgress(true)
-        
+
         toast({
           title: "Batch Created Successfully",
           description: `Batch ID: ${result.data.batchId}`,
@@ -174,7 +231,6 @@ function BatchProcessingPage() {
     }
   }
 
-  const completedFiles = uploadedFiles.filter(file => file.status === 'completed')
 
   return (
     <div className="space-y-6">
@@ -221,13 +277,15 @@ function BatchProcessingPage() {
       )}
 
       {/* Configuration Form */}
-      {showConfigForm && completedFiles.length > 0 && !showProgress && (
+      {showConfigForm && uploadedFiles.filter(f => f.status === 'completed').length > 0 && !showProgress && (
         <BatchConfigForm
-          uploadedFiles={completedFiles.map(file => ({
-            id: file.id,
-            fileName: file.file.name,
-            fileUrl: file.uploadedUrl!
-          }))}
+          uploadedFiles={uploadedFiles
+            .filter(file => file.status === 'completed' && file.uploadedUrl)
+            .map(file => ({
+              id: file.id,
+              fileName: file.file.name,
+              fileUrl: file.uploadedUrl!
+            }))}
           onSubmit={handleBatchCreate}
           isSubmitting={batchCreateMutation.isPending}
         />

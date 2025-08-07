@@ -134,7 +134,7 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center space-y-1">
                 <div className="text-2xl font-bold text-primary">
-                  {storyAudio.audioStats.totalChunks}
+                  {generation.totalChunks || storyAudio.audioStats.totalChunks}
                 </div>
                 <div className="text-xs text-muted-foreground">Total Chunks</div>
               </div>

@@ -57,36 +57,58 @@ interface UseBatchSocketOptions {
 }
 
 export function useBatchSocket(options: UseBatchSocketOptions = {}) {
-  const { user } = useAuth()
+  const { user, accessToken } = useAuth()
   const socketRef = useRef<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
 
+  // Store callbacks in refs to avoid dependency issues
+  const callbacksRef = useRef({
+    onBatchStart: options.onBatchStart,
+    onBatchProgress: options.onBatchProgress,
+    onBatchComplete: options.onBatchComplete,
+    onBatchError: options.onBatchError,
+    onAutoModeStart: options.onAutoModeStart,
+    onAutoModeProgress: options.onAutoModeProgress,
+    onAutoModeComplete: options.onAutoModeComplete,
+    onAutoModeError: options.onAutoModeError
+  })
+
+  // Update callbacks ref when options change
+  useEffect(() => {
+    callbacksRef.current = {
+      onBatchStart: options.onBatchStart,
+      onBatchProgress: options.onBatchProgress,
+      onBatchComplete: options.onBatchComplete,
+      onBatchError: options.onBatchError,
+      onAutoModeStart: options.onAutoModeStart,
+      onAutoModeProgress: options.onAutoModeProgress,
+      onAutoModeComplete: options.onAutoModeComplete,
+      onAutoModeError: options.onAutoModeError
+    }
+  }, [options])
+
   const {
     batchId,
-    onBatchStart,
-    onBatchProgress,
-    onBatchComplete,
-    onBatchError,
-    onAutoModeStart,
-    onAutoModeProgress,
-    onAutoModeComplete,
-    onAutoModeError
   } = options
 
   // Initialize socket connection
   const connectSocket = useCallback(() => {
-    if (!user?.token) {
+    if (!accessToken) {
       setConnectionError('No authentication token available')
       return
+    }
+
+    // Disconnect existing socket if any
+    if (socketRef.current) {
+      socketRef.current.disconnect()
+      socketRef.current = null
     }
 
     const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001'
     
     socketRef.current = io(socketUrl, {
-      auth: {
-        token: user.token
-      },
+      query: { token: accessToken },
       transports: ['websocket', 'polling'],
       autoConnect: true
     })
@@ -111,43 +133,43 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
     // Batch processing events
     socketRef.current.on('batch-stories-start', (data: BatchProcessingEvent) => {
       console.log('Batch start event:', data)
-      onBatchStart?.(data)
+      callbacksRef.current.onBatchStart?.(data)
     })
 
     socketRef.current.on('batch-stories-progress', (data: BatchProgressEvent) => {
       console.log('Batch progress event:', data)
-      onBatchProgress?.(data)
+      callbacksRef.current.onBatchProgress?.(data)
     })
 
     socketRef.current.on('batch-stories-complete', (data: BatchCompleteEvent) => {
       console.log('Batch complete event:', data)
-      onBatchComplete?.(data)
+      callbacksRef.current.onBatchComplete?.(data)
     })
 
     socketRef.current.on('batch-stories-error', (data: BatchErrorEvent) => {
       console.log('Batch error event:', data)
-      onBatchError?.(data)
+      callbacksRef.current.onBatchError?.(data)
     })
 
     // Auto mode events
     socketRef.current.on('auto-mode-start', (data: AutoModeEvent) => {
       console.log('Auto mode start event:', data)
-      onAutoModeStart?.(data)
+      callbacksRef.current.onAutoModeStart?.(data)
     })
 
     socketRef.current.on('auto-mode-progress', (data: AutoModeEvent) => {
       console.log('Auto mode progress event:', data)
-      onAutoModeProgress?.(data)
+      callbacksRef.current.onAutoModeProgress?.(data)
     })
 
     socketRef.current.on('auto-mode-complete', (data: AutoModeEvent) => {
       console.log('Auto mode complete event:', data)
-      onAutoModeComplete?.(data)
+      callbacksRef.current.onAutoModeComplete?.(data)
     })
 
     socketRef.current.on('auto-mode-error', (data: AutoModeEvent) => {
       console.log('Auto mode error event:', data)
-      onAutoModeError?.(data)
+      callbacksRef.current.onAutoModeError?.(data)
     })
 
     // Error events
@@ -155,7 +177,7 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
       console.error('Socket error:', data)
       setConnectionError(data.message)
     })
-  }, [user?.token, onBatchStart, onBatchProgress, onBatchComplete, onBatchError, onAutoModeStart, onAutoModeProgress, onAutoModeComplete, onAutoModeError])
+  }, [accessToken])
 
   // Join batch room when batchId is available
   const joinBatchRoom = useCallback(() => {
@@ -182,16 +204,17 @@ export function useBatchSocket(options: UseBatchSocketOptions = {}) {
 
   // Initialize connection
   useEffect(() => {
-    if (user?.token) {
+    if (accessToken) {
       connectSocket()
     }
 
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect()
+        socketRef.current = null
       }
     }
-  }, [user?.token, connectSocket])
+  }, [accessToken, connectSocket])
 
   // Join/leave batch room when batchId changes
   useEffect(() => {

@@ -2,28 +2,28 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {
-  playerStateAtom,
-  generationStateAtom,
-  selectedVoiceAtom,
-  // Keep only UI state atoms, remove data atoms
-  setPlayingAtom,
-  setCurrentTimeAtom,
-  setDurationAtom,
-  setVolumeAtom,
-  setMutedAtom,
-  setCurrentChunkAtom,
-  setPlaylistAtom,
-  resetPlayerAtom, setGenerationProgressAtom,
-  setGenerationErrorAtom,
-  completeGenerationAtom,
-  resetGenerationAtom
+    playerStateAtom,
+    generationStateAtom,
+    selectedVoiceAtom,
+    // Keep only UI state atoms, remove data atoms
+    setPlayingAtom,
+    setCurrentTimeAtom,
+    setDurationAtom,
+    setVolumeAtom,
+    setMutedAtom,
+    setCurrentChunkAtom,
+    setPlaylistAtom,
+    resetPlayerAtom, setGenerationProgressAtom,
+    setGenerationErrorAtom,
+    completeGenerationAtom,
+    resetGenerationAtom
 } from '@/store/audio.store'
 import {
-  useAudioChunksQuery,
-  useAudioStatusQuery,
-  useGenerateAudioMutation,
-  useDeleteAudioMutation,
-  useDownloadAudioMutation
+    useAudioChunksQuery,
+    useAudioStatusQuery,
+    useGenerateAudioMutation,
+    useDeleteAudioMutation,
+    useDownloadAudioMutation
 } from '@/hooks/useAudioQueries'
 import type { AudioChunk } from '@/services/audio-service'
 import { toast } from 'sonner'
@@ -77,9 +77,10 @@ export const useAudioPlayerControls = () => {
 
   const play = useCallback((audioSrc?: string) => {
     if (!audioRef.current) return
-    
-    if (audioSrc && audioRef.current.src !== audioSrc) {
-      audioRef.current.src = audioSrc
+    const audioUrl = `${import.meta.env.VITE_SOCKET_URL}/${audioSrc}`
+    if (audioSrc && audioRef.current.src !== audioUrl) {
+      audioRef.current.src = audioUrl
+      audioRef.current.crossOrigin ="anonymous"
     }
     
     audioRef.current.play()
@@ -174,7 +175,7 @@ export const useAudioGenerationControls = () => {
   }, [generateMutation, selectedVoice, setGenerationError])
 
   const selectVoice = useCallback((voiceId: string) => {
-    setSelectedVoice(voiceId)
+    setSelectedVoice(voiceId as VoiceOption)
   }, [setSelectedVoice])
 
   return {
@@ -203,6 +204,7 @@ export const useStoryAudio = (storyId: string) => {
     error, 
     refetch: refreshAudioChunks 
   } = useAudioChunksQuery(storyId)
+
   
   // ✅ Use useQuery for audio status
   const { 
@@ -323,6 +325,14 @@ export const useAudioPlaylist = (storyId: string) => {
     }
   }, [completedChunks.length, playChunk])
 
+  const togglePlayPauseChunk = useCallback((chunkIndex: number) => {
+    if (playerControls.isPlaying) {
+      playerControls.pause()
+    } else {
+      playChunk(chunkIndex);
+    }
+  }, [playerControls.isPlaying, playerControls.pause, playChunk])
+
   // Auto-play next chunk when current ends
   useEffect(() => {
     if (!playerControls.isPlaying && 
@@ -340,6 +350,7 @@ export const useAudioPlaylist = (storyId: string) => {
     playNext,
     playPrevious,
     playFromBeginning,
+    togglePlayPauseChunk,
     ...playerControls
   }
 }
@@ -354,7 +365,7 @@ export const useVoiceSelection = () => {
 
 
   const selectVoice = useCallback((voiceId: string) => {
-    setSelectedVoice(voiceId)
+    setSelectedVoice(voiceId as VoiceOption)
   }, [setSelectedVoice])
 
   return {
