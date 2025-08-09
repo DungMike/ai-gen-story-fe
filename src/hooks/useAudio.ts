@@ -2,28 +2,29 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {
-    playerStateAtom,
-    generationStateAtom,
-    selectedVoiceAtom,
-    // Keep only UI state atoms, remove data atoms
-    setPlayingAtom,
-    setCurrentTimeAtom,
-    setDurationAtom,
-    setVolumeAtom,
-    setMutedAtom,
-    setCurrentChunkAtom,
-    setPlaylistAtom,
-    resetPlayerAtom, setGenerationProgressAtom,
-    setGenerationErrorAtom,
-    completeGenerationAtom,
-    resetGenerationAtom
+  playerStateAtom,
+  generationStateAtom,
+  selectedVoiceAtom,
+  // Keep only UI state atoms, remove data atoms
+  setPlayingAtom,
+  setCurrentTimeAtom,
+  setDurationAtom,
+  setVolumeAtom,
+  setMutedAtom,
+  setCurrentChunkAtom,
+  setPlaylistAtom,
+  resetPlayerAtom, setGenerationProgressAtom,
+  setGenerationErrorAtom,
+  completeGenerationAtom,
+  resetGenerationAtom
 } from '@/store/audio.store'
 import {
-    useAudioChunksQuery,
-    useAudioStatusQuery,
-    useGenerateAudioMutation,
-    useDeleteAudioMutation,
-    useDownloadAudioMutation
+  useAudioChunksQuery,
+  useAudioStatusQuery,
+  useGenerateAudioMutation,
+  useDeleteAudioMutation,
+  useDownloadAudioMutation,
+  useOpenMergedAudioMutation
 } from '@/hooks/useAudioQueries'
 import type { AudioChunk } from '@/services/audio-service'
 import { toast } from 'sonner'
@@ -214,6 +215,7 @@ export const useStoryAudio = (storyId: string) => {
   
   // ✅ Use mutations for actions
   const downloadMutation = useDownloadAudioMutation()
+  const openMergedAudioMutation = useOpenMergedAudioMutation()
   const deleteMutation = useDeleteAudioMutation()
   
   const playerState = useAtomValue(playerStateAtom)
@@ -237,6 +239,16 @@ export const useStoryAudio = (storyId: string) => {
       }
     }
   }, [storyId, downloadMutation])
+
+  const openMergedAudio = useCallback(async () => {
+    if (storyId) {
+      try {
+        await openMergedAudioMutation.mutateAsync(storyId)
+      } catch (error: any) {
+        toast.error('Failed to open merged audio file')
+      }
+    }
+  }, [storyId, openMergedAudioMutation])
 
   const deleteAllAudio = useCallback(async () => {
     if (storyId) {
@@ -272,7 +284,8 @@ export const useStoryAudio = (storyId: string) => {
     checkAudioStatus,
     downloadAllAudio,
     deleteAllAudio,
-    isDownloading: downloadMutation.isPending,
+    openMergedAudio,
+    isDownloading: downloadMutation.isPending || openMergedAudioMutation.isPending,
     isDeleting: deleteMutation.isPending
   }
 }

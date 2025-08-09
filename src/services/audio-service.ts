@@ -1,6 +1,6 @@
 // Audio Service - Unified API service following project architecture
 import { VoiceOption } from '@/components/audio/constants';
-import { apiClient } from '@/utils/api'
+import { apiClient } from '@/utils/api';
 
 
 
@@ -200,6 +200,32 @@ class AudioService {
       return response
     } catch (error) {
       throw error
+    }
+  }
+
+  // Download merged audio and return downloadUrl
+  async getMergedAudioDownloadUrl(storyId: string): Promise<string> {
+    try {
+      const response = await apiClient.get<AudioDownloadResponse>(`/audio/merge/download/${storyId}`);
+      // Nếu API trả về thành công và có downloadUrl
+      if (response?.data?.downloadUrl) {
+        return response.data.downloadUrl;
+      }
+      throw new Error('Failed to get merged audio file URL');
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Open merged audio in new tab
+  async openMergedAudioInNewTab(storyId: string) {
+    try {
+      const downloadUrl = await this.getMergedAudioDownloadUrl(storyId);
+      const baseUrl = (import.meta as any).env?.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:3001';
+      const fullUrl = downloadUrl.startsWith('http') ? downloadUrl : `${baseUrl}${downloadUrl}`;
+      window.open(fullUrl, '_blank');
+    } catch (error) {
+      console.error('Can not open merged audio:', error);
     }
   }
 }

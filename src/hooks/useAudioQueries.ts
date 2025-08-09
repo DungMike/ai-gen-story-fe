@@ -180,6 +180,19 @@ export const useDownloadAudioMutation = () => {
   })
 }
 
+export const useOpenMergedAudioMutation = () => {
+  return useMutation({
+    mutationFn: (storyId: string) => audioService.openMergedAudioInNewTab(storyId),
+    onSuccess: () => {
+      toast.success('Merged audio file opened in a new tab!')
+    },
+    onError: (error: any) => {
+      const errorMessage = error instanceof Error ? error.message : 'Download failed'
+      toast.error(errorMessage)
+    }
+  })
+}
+
 /**
  * Retry failed audio mutation
  */
