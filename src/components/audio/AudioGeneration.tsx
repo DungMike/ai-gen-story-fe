@@ -17,13 +17,20 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react'
 import { useAudioGenerationControls, useStoryAudio, useVoiceSelection } from '@/hooks/useAudio'
 import { DEFAULT_WORD_PER_CHUNK } from '@/store/audio.store'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 
 interface AudioGenerationProps {
   storyId: string
@@ -197,20 +204,42 @@ export const AudioGeneration: React.FC<AudioGenerationProps> = ({
 
                 {storyAudio.audioStats.hasAudio && (
                   <>
-                    <Button
-                      onClick={storyAudio.downloadAllAudio}
-                      variant="outline"
-                      className="gap-2"
-                      disabled={storyAudio.isDownloading}
-                    >
-                      {storyAudio.isDownloading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Download className="h-4 w-4" />
-                      )}
-                      Download All
-                    </Button>
-
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                          disabled={storyAudio.isDownloading}
+                        >{storyAudio.isDownloading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                          Download Audio
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={storyAudio.downloadAllAudio}
+                          disabled={storyAudio.isDownloading}
+                        >
+                          {storyAudio.isDownloading ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <Download className="h-4 w-4 mr-2" />
+                          )}
+                          Download all
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={storyAudio.openMergedAudio}
+                          disabled={storyAudio.isDownloading || generation.isGenerating}
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          Open merged audio
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button
                       onClick={storyAudio.deleteAllAudio}
                       variant="outline"
