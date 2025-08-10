@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Settings, Sparkles, Image, Volume2, FileText, Loader2 } from 'lucide-react'
+import { AUDIO_VOICES } from './constant'
 
 export interface StoryConfig {
   title?: string
@@ -51,11 +52,7 @@ const IMAGE_STYLES = [
   { value: 'digital-art', label: 'Digital Art' }
 ]
 
-const AUDIO_VOICES = [
-  { value: 'Achird', label: 'Achird' },
-  { value: 'Google TTS', label: 'Google TTS' },
-  { value: 'ElevenLabs', label: 'ElevenLabs' }
-]
+
 
 export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
   uploadedFiles,

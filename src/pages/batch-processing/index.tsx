@@ -124,13 +124,9 @@ function BatchProcessingPage() {
           )
         }
       })
-      console.log("🚀 ~ handleUploadFiles ~ result:", result)
 
       // Update files with uploaded URLs
       const finalFiles = uploadedFiles.map(file => {
-        console.log("🚀 ~ handleUploadFiles ~ file.name:", file.file.name)
-        console.log("🚀 ~ handleUploadFiles ~ file.size:", file.file.size)
-        console.log("🚀 ~ handleUploadFiles ~ result.files:", result.files)
 
         // Try to match by file name first
         let uploadedFile = result.files.find(uploaded => uploaded.fileName === file.file.name)
@@ -159,7 +155,6 @@ function BatchProcessingPage() {
           })
         }
 
-        console.log("🚀 ~ handleUploadFiles ~ uploadedFile:", uploadedFile)
 
         if (uploadedFile) {
           return {
@@ -178,7 +173,6 @@ function BatchProcessingPage() {
           error: 'File upload completed but could not be matched'
         }
       })
-      console.log("🚀 ~ handleUploadFiles ~ finalFiles:", finalFiles)
 
       setUploadedFiles(finalFiles)
       setShowConfigForm(true)
