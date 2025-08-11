@@ -24,7 +24,7 @@ import {
 import { toast } from 'sonner'
 import { GenerateImagesDto, ImageChunk } from '@/services/images-service'
 import { Separator } from '@radix-ui/react-select'
-import { Input } from '@/components/ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, Input, Textarea } from '@/components/ui'
 
 export default function GenerateImagesPage() {
   const { storyId } = useParams<{ storyId: string }>()
@@ -40,6 +40,7 @@ export default function GenerateImagesPage() {
     deleteImageChunk,
     deleteAllImages,
     downloadImages,
+    generateImageWithChunkId,
     isGenerating,
     isRetrying,
     isDeletingChunk,
@@ -48,7 +49,6 @@ export default function GenerateImagesPage() {
     refetchChunks,
     refetchStatus
   } = useImages(storyId!)
-  console.log("🚀 ~ GenerateImagesPage ~ imageChunks:", imageChunks)
 
   const [showImageDetails, setShowImageDetails] = useState<Record<string, boolean>>({})
   const [realTimeProgress, setRealTimeProgress] = useState<{
@@ -119,6 +119,11 @@ export default function GenerateImagesPage() {
   const handleGenerateImages = () => {
     if (!storyId) return
     generateImages(generateImagesDto)
+  }
+
+  const handleGenerateImageWithChunkId = (chunkId: string, customPrompt: string) => {
+    if (!chunkId) return
+    generateImageWithChunkId({chunkId, customPrompt})
   }
 
   const handleRetryFailed = () => {
@@ -412,6 +417,7 @@ export default function GenerateImagesPage() {
                 onToggleDetails={() => toggleImageDetails(chunk._id)}
                 showDetails={showImageDetails[chunk._id] || false}
                 isDeleting={isDeletingChunk}
+                onGenerateImageWithChunkId={(customPrompt) => handleGenerateImageWithChunkId(chunk._id, customPrompt || '')}
               />
             ))}
           </div>
@@ -427,9 +433,12 @@ interface ImageChunkCardProps {
   onToggleDetails: () => void
   showDetails: boolean
   isDeleting: boolean
+  onGenerateImageWithChunkId: (customPrompt?: string) => void
 }
 
-function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDeleting }: ImageChunkCardProps) {
+function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDeleting, onGenerateImageWithChunkId }: ImageChunkCardProps) {
+  const [showRegeneratePopup, setShowRegeneratePopup] = useState<boolean>(false);
+  const [customPrompt, setCustomPrompt] = useState<string>('');
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-500'
@@ -449,6 +458,16 @@ function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDelet
       default: return <AlertCircle className="w-4 h-4" />
     }
   }
+
+  const toggleRegeneratePopup = () => {
+    setShowRegeneratePopup(prev => !prev);
+  }
+
+  
+  const handleRegenerateImage = () => {
+    onGenerateImageWithChunkId(customPrompt || '');
+    toggleRegeneratePopup();
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -516,7 +535,7 @@ function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDelet
         )}
 
         {/* Actions */}
-        <div className="flex justify-end mt-3">
+        <div className="flex justify-end items-center mt-3">
           <ConfirmDialog
             title="Delete Image"
             description="Are you sure you want to delete this image? This action cannot be undone."
@@ -534,8 +553,37 @@ function ImageChunkCard({ chunk, onDelete, onToggleDetails, showDetails, isDelet
               <Trash2 className="w-3 h-3" />
             </Button>
           </ConfirmDialog>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleRegeneratePopup}
+            className="h-6 w-6 p-0"
+          >
+            <RefreshCw className="w-3 h-3" />
+          </Button>
         </div>
+
+        <Dialog open={showRegeneratePopup} onOpenChange={setShowRegeneratePopup}>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Regenerate Image</DialogTitle>
+            </DialogHeader>
+            <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Custom Prompt</label>
+                  <Textarea rows={3} className='outline-none' value={customPrompt || ''} onChange={(e) => setCustomPrompt(e.target.value)} />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={toggleRegeneratePopup}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleRegenerateImage}>
+                    Regenerate
+                  </Button>
+                </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   )
-} 
+}

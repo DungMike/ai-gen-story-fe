@@ -41,11 +41,28 @@ export interface GenerateImagesDto {
   maxWordsPerChunk?: number;
 }
 
+export interface GenerateImageWithChunkIdDto {
+  chunkId: string;
+  customPrompt?: string;
+}
+
 class ImagesService {
   // Generate images for a story
   async generateImages(storyId: string, generateImagesDto: GenerateImagesDto): Promise<GenerateImagesResponse> {
     try {
       const response = await apiClient.post<GenerateImagesResponse>(`/images/generate/${storyId}`, generateImagesDto)
+      return response
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // Generate image (only one) for a story
+  async generateImageWithChunkId(generateImagesDto: GenerateImageWithChunkIdDto): Promise<GenerateImagesResponse> {
+    try {
+      const response = await apiClient.post<GenerateImagesResponse>(`/images/retry-chunk/${generateImagesDto.chunkId}`, {
+        customPrompt: generateImagesDto.customPrompt
+      })
       return response
     } catch (error) {
       throw error
