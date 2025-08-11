@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Settings, Sparkles, Image, Volume2, FileText, Loader2 } from 'lucide-react'
-import { AUDIO_VOICES } from './constant'
+import { AUDIO_VOICES, MODEL_VOICE } from './constant'
 import { useCookiePrompts } from '@/hooks/use-cookie-prompt'
 
 export interface StoryConfig {
@@ -22,6 +22,7 @@ export interface AutoModeConfig {
   generateAudio?: boolean
   mergeAudio?: boolean
   audioVoice?: string
+  modelVoice?: string
   wordPerChunkImage?: number
   wordPerChunkAudio?: number
   customPromptImage?: string
@@ -65,6 +66,7 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
   const [generateAudio, setGenerateAudio] = useState(true)
   const [mergeAudio, setMergeAudio] = useState(true)
   const [audioVoice, setAudioVoice] = useState('Achird')
+  const [modelVoice, setModelVoice] = useState(MODEL_VOICE[0].value)
   const [wordPerChunkImage, setWordPerChunkImage] = useState(500)
   const [wordPerChunkAudio, setWordPerChunkAudio] = useState(500)
   const [customPromptImage, setCustomPromptImage] = useState('')
@@ -99,6 +101,7 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
         generateAudio,
         mergeAudio,
         audioVoice,
+        modelVoice,
         wordPerChunkImage,
         wordPerChunkAudio,
         customPromptImage: customPromptImage || undefined,
@@ -315,7 +318,21 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
-                    
+                    <div className="space-y-2">
+                      <Label htmlFor="audioVoice">Model Voice</Label>
+                      <Select value={modelVoice} onValueChange={setModelVoice}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select voice" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {MODEL_VOICE.map((voice) => (
+                            <SelectItem key={voice.value} value={voice.value}>
+                              {voice.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="wordPerChunkAudio">Words per Chunk (Audio)</Label>
                       <Input
