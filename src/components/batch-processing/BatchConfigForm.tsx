@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Settings, Sparkles, Image, Volume2, FileText, Loader2 } from 'lucide-react'
 import { AUDIO_VOICES } from './constant'
+import { useCookiePrompts } from '@/hooks/use-cookie-prompt'
 
 export interface StoryConfig {
   title?: string
@@ -69,7 +70,10 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
   const [customPromptImage, setCustomPromptImage] = useState('')
   const [customPromptAudio, setCustomPromptAudio] = useState('')
   const [imageStyle, setImageStyle] = useState('realistic')
-  
+  const { prompts, addPrompt, removePrompt } = useCookiePrompts();
+  const [savePrompt, setSavePrompt] = useState(false);
+  const [promptName, setPromptName] = useState('');
+
   const [storyConfigs, setStoryConfigs] = useState<StoryConfig[]>(
     uploadedFiles.map(file => ({
       title: file.fileName.replace(/\.[^/.]+$/, ''), // Remove file extension
@@ -102,9 +106,22 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
         imageStyle
       } : undefined
     }
-
     onSubmit(formData)
   }
+
+  const handleSavePrompt = (index: number) => {
+    if (!promptName) return;
+  
+    const newPrompt = { name: promptName, prompt: storyConfigs[index].customPrompt || '' };
+    addPrompt(newPrompt);
+    setPromptName('');
+    setSavePrompt(false);
+  };
+
+  const handleSelectPrompt = (index: number, selectedPrompt: string) => {
+    handleStoryConfigChange(index, 'customPrompt', selectedPrompt);
+  };
+  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -136,6 +153,33 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
                     onChange={(e) => handleStoryConfigChange(index, 'title', e.target.value)}
                     placeholder="Enter story title"
                   />
+                  {/* Save prompt to cookie */}
+                  {storyConfigs[index].customPrompt && (<div className="!mt-4 flex items-center space-x-2">
+                    <Checkbox
+                      id={`savePrompt-${index}`}
+                      checked={savePrompt}
+                      onCheckedChange={(checked) => setSavePrompt(checked as boolean)}
+                    />
+                    <Label htmlFor={`savePrompt-${index}`}>Save this prompt</Label>
+                  </div>)}
+                  {storyConfigs[index].customPrompt && savePrompt && (
+                    <div className="space-y-2 !mt-2">
+                      <Label htmlFor={`promptName-${index}`}>Prompt Name</Label>
+                      <Input
+                        id={`promptName-${index}`}
+                        value={promptName}
+                        onChange={(e) => setPromptName(e.target.value)}
+                        placeholder="Enter a name for this prompt"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSavePrompt(index)}
+                      >
+                        Save Prompt
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -147,6 +191,29 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
                     placeholder="Enter custom prompt for story generation"
                     rows={2}
                   />
+                  {/* Select saved prompts */}
+
+                  {prompts.length > 0 && (
+                    <div className="space-y-2 mt-2">
+                      <Label htmlFor={`customPrompt-${index}`}>Select prompt</Label>
+                      <Select
+                        onValueChange={(value) => handleSelectPrompt(index, value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a prompt" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {prompts
+                            .filter((prompt) => prompt.prompt.trim() !== '') // Lọc các prompt có giá trị hợp lệ
+                            .map((prompt, i) => (
+                              <SelectItem key={i} value={prompt.prompt}>
+                                {prompt.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

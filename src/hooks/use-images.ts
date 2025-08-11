@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { imagesService, GenerateImagesDto } from '@/services/images-service'
+import { imagesService, GenerateImagesDto, GenerateImageWithChunkIdDto } from '@/services/images-service'
 import { useDownloadImagesMutation } from './use-image-queries'
 import { useCallback } from 'react'
 
@@ -46,6 +46,20 @@ export function useImages(storyId: string) {
       toast.success('Image generation started successfully!')
       // Refetch status and chunks after generation starts
       refetchStatus()
+      refetchChunks()
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to start image generation'
+      toast.error(message)
+    }
+  })
+
+  // Generate images mutation
+  const generateImageWithChunkIdMutation = useMutation({
+    mutationFn: (generateImagesDto: GenerateImageWithChunkIdDto) => imagesService.generateImageWithChunkId(generateImagesDto),
+    onSuccess: (data) => {
+      toast.success('Image generation started successfully!')
+      // Refetch chunks after generation starts
       refetchChunks()
     },
     onError: (error: any) => {
@@ -126,6 +140,7 @@ export function useImages(storyId: string) {
     retryFailedImages: retryFailedImagesMutation.mutate,
     deleteImageChunk: deleteImageChunkMutation.mutate,
     deleteAllImages: deleteAllImagesMutation.mutate,
+    generateImageWithChunkId: generateImageWithChunkIdMutation.mutate,
     downloadImages: downloadAllImage,
     
     // Loading states for actions
@@ -134,6 +149,7 @@ export function useImages(storyId: string) {
     isDeletingChunk: deleteImageChunkMutation.isPending,
     isDeletingAll: deleteAllImagesMutation.isPending,
     isDownloading: downloadMutation.isPending,
+    isGeneratingImageWithChunkId: generateImageWithChunkIdMutation.isPending,
     
     // Refetch functions
     refetchChunks,
