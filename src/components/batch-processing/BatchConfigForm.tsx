@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Settings, Sparkles, Image, Volume2, FileText, Loader2 } from 'lucide-react'
 import { AUDIO_VOICES, MODEL_VOICE } from './constant'
-import { useCookiePrompts } from '@/hooks/use-cookie-prompt'
+import { useLocalStoragePrompts } from '@/hooks/use-save-prompt'
 
 export interface StoryConfig {
   title?: string
@@ -72,7 +72,7 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
   const [customPromptImage, setCustomPromptImage] = useState('')
   const [customPromptAudio, setCustomPromptAudio] = useState('')
   const [imageStyle, setImageStyle] = useState('realistic')
-  const { prompts, addPrompt, removePrompt } = useCookiePrompts();
+  const { prompts, addPrompt, removePrompt } = useLocalStoragePrompts();
   const [savePrompt, setSavePrompt] = useState(false);
   const [promptName, setPromptName] = useState('');
 
@@ -115,14 +115,25 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
   const handleSavePrompt = (index: number) => {
     if (!promptName) return;
   
-    const newPrompt = { name: promptName, prompt: storyConfigs[index].customPrompt || '' };
+    const newPrompt = {
+      id: Date.now().toString(),
+      name: promptName,
+      prompt: storyConfigs[index].customPrompt || ''
+    };
+    if (prompts.some((prompt) => prompt.id === newPrompt.id)) {
+      console.error('Duplicate ID detected!');
+      return;
+    }
     addPrompt(newPrompt);
     setPromptName('');
     setSavePrompt(false);
   };
 
-  const handleSelectPrompt = (index: number, selectedPrompt: string) => {
-    handleStoryConfigChange(index, 'customPrompt', selectedPrompt);
+  const handleSelectPrompt = (index: number, selectedValue: string) => {
+    const selectedPrompt = prompts.find((prompt) => prompt.id === selectedValue);
+    if (selectedPrompt) {
+      handleStoryConfigChange(index, 'customPrompt', selectedPrompt.prompt);
+    }
   };
   
 
@@ -207,9 +218,9 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
                         </SelectTrigger>
                         <SelectContent>
                           {prompts
-                            .filter((prompt) => prompt.prompt.trim() !== '') // Lọc các prompt có giá trị hợp lệ
+                            .filter((prompt) => prompt.prompt.trim() !== '') 
                             .map((prompt, i) => (
-                              <SelectItem key={i} value={prompt.prompt}>
+                              <SelectItem key={i} value={prompt.id}>
                                 {prompt.name}
                               </SelectItem>
                             ))}
