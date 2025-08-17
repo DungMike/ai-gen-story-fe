@@ -20,6 +20,7 @@ export interface AutoModeConfig {
   enabled: boolean
   generateImages?: boolean
   generateAudio?: boolean
+  generateStory?: boolean
   mergeAudio?: boolean
   audioVoice?: string
   modelVoice?: string
@@ -64,6 +65,7 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
   const [autoModeEnabled, setAutoModeEnabled] = useState(true)
   const [generateImages, setGenerateImages] = useState(true)
   const [generateAudio, setGenerateAudio] = useState(true)
+  const [generateStory, setGenerateStory] = useState(true)
   const [mergeAudio, setMergeAudio] = useState(true)
   const [audioVoice, setAudioVoice] = useState('Achird')
   const [modelVoice, setModelVoice] = useState(MODEL_VOICE[0].value)
@@ -100,6 +102,7 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
         generateImages,
         generateAudio,
         mergeAudio,
+        generateStory,
         audioVoice,
         modelVoice,
         wordPerChunkImage,
@@ -268,6 +271,17 @@ export const BatchConfigForm: React.FC<BatchConfigFormProps> = ({
                 </h4>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="generateStory"
+                      checked={generateStory}
+                      onCheckedChange={(checked) => setGenerateStory(checked as boolean)}
+                    />
+                    <Label htmlFor="generateStory" className="flex items-center gap-2">
+                      <Volume2 className="w-4 h-4" />
+                      Generate New Story
+                    </Label>
+                  </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="generateImages"
