@@ -11,8 +11,14 @@ import { UserStoryStatus } from './constant';
 import { UserStoriesPanelProps } from './interface';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useDownloadAudioMutation } from '@/hooks/useAudioQueries';
+import { useDownloadAudioMutation, useOpenMergedAudioMutation } from '@/hooks/useAudioQueries';
 import { useDownloadImagesMutation } from '@/hooks/use-image-queries';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
   stories = [],
@@ -34,6 +40,7 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
   const downloadImagesMutation = useDownloadImagesMutation();
   // Download audio mutation
   const downloadAudioMutation = useDownloadAudioMutation()
+  const openMergedAudioMutation = useOpenMergedAudioMutation();
   const getStatusText = (status: any) => {
     if (!status) return 'Chưa hoàn thành';
 
@@ -86,6 +93,16 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
         await downloadAudioMutation.mutateAsync(storyId)
       } catch (error: any) {
         toast.error('Failed to download audio files')
+      }
+    }
+  }, [downloadAudioMutation])
+
+  const openMergedAudio = useCallback(async (storyId: string) => {
+    if (storyId) {
+      try {
+        await openMergedAudioMutation.mutateAsync(storyId)
+      } catch (error: any) {
+        toast.error('Failed to open  erged audio file')
       }
     }
   }, [downloadAudioMutation])
@@ -226,31 +243,54 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
                           <FileText className="w-3 h-3" />
                           Truyện {story.status.storyGenerated ? '✓' : '...'}
                         </Badge>
-                        <Badge  onClick={() => handleGenerateAudio(story._id)} variant={story.status.audioGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
+                        <Badge onClick={() => handleGenerateAudio(story._id)} variant={story.status.audioGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
                           <Play className="w-3 h-3" />
                           Audio {story.status.audioGenerated ? '✓' : '...'}
                         </Badge>
-                        <Badge onClick={() => handleGenerateImages(story._id)}  variant={story.status.imagesGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
+                        <Badge onClick={() => handleGenerateImages(story._id)} variant={story.status.imagesGenerated ? "default" : "secondary"} className="flex items-center gap-1 cursor-pointer">
                           <ImageIcon className="w-3 h-3" />
                           Ảnh {story.status.imagesGenerated ? '✓' : '...'}
                         </Badge>
                       </div>
                       <div className="flex gap-2 flex-wrap">
                         {story.status.audioGenerated &&
-                          <Button
-                            onClick={() => downloadAllAudio(story._id)}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
-                            disabled={downloadAudioMutation.isPending}
-                          >
-                            {downloadAudioMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Download className="h-4 w-4" />
-                            )}
-                            Audios
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                                disabled={downloadAudioMutation.isPending || openMergedAudioMutation.isPending}
+                              >
+                                {(downloadAudioMutation.isPending || openMergedAudioMutation.isPending) ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                ) : (
+                                  <Download className="h-4 w-4" />
+                                )}
+                                Audio
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem
+                                onClick={() => downloadAllAudio(story._id)}
+                                disabled={downloadAudioMutation.isPending}
+                              >
+                                {downloadAudioMutation.isPending ? (
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                ) : (
+                                  <Download className="h-4 w-4 mr-2" />
+                                )}
+                                Download all
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => openMergedAudioMutation.mutate(story._id)}
+                                disabled={openMergedAudioMutation.isPending}
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Open merged audio
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         }
                         {story.status.imagesGenerated &&
                           <Button
@@ -418,8 +458,8 @@ export const UserStoriesPanel: React.FC<UserStoriesPanelProps> = ({
         </DialogContent>
       </Dialog>
 
-       {/* Modal xem custom prompt */}
-       <Dialog open={isPromptModalOpen} onOpenChange={setIsPromptModalOpen}>
+      {/* Modal xem custom prompt */}
+      <Dialog open={isPromptModalOpen} onOpenChange={setIsPromptModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>{selectedStory?.title}</DialogTitle>
